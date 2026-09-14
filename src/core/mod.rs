@@ -1,5 +1,4 @@
 //! Módulo Core - Lógica principal del buscador
-
 // Submódulos privados
 mod engine;
 mod error;
@@ -12,7 +11,6 @@ pub use types::{SearchConfig, SearchResult};
 
 // ===== Funciones auxiliares y lógica principal =====
 
-use byte_unit::Byte;
 use colored::*;
 use glob::Pattern;
 use ignore::WalkBuilder;
@@ -22,7 +20,7 @@ use std::collections::HashMap;
 use std::fs;
 use std::io::Write;
 use std::path::{Path, PathBuf};
-use std::sync::atomic::Ordering;
+use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
 use std::time::Instant;
 
@@ -64,7 +62,7 @@ pub fn cosine_similarity(vec1: &HashMap<String, u32>, vec2: &HashMap<String, u32
 }
 
 pub fn parse_size(size_str: &str) -> anyhow::Result<u64> {
-    let size = Byte::parse_str(size_str, true)
+    let size = byte_unit::Byte::parse_str(size_str, true)
         .map_err(|e| anyhow::anyhow!("Error parsing size: {}", e))?;
     Ok(size.as_u64())
 }
@@ -333,7 +331,7 @@ pub fn index_files(
     Ok(())
 }
 
-// ===== Búsqueda =====
+// ===== Búsqueda (AHORA MULTI-HILO) =====
 
 pub fn search_files(config: SearchConfigInternal) -> anyhow::Result<Vec<super::SearchResult>> {
     use crate::cache::Cache;
@@ -370,6 +368,7 @@ pub fn search_files(config: SearchConfigInternal) -> anyhow::Result<Vec<super::S
         .as_ref()
         .map(|e| e.iter().map(|s| s.as_str()).collect());
 
+    // Búsqueda por nombre de archivo
     if let Some(file_pattern) = &config.file {
         let found: Vec<PathBuf> = cache
             .entries
@@ -410,7 +409,7 @@ pub fn search_files(config: SearchConfigInternal) -> anyhow::Result<Vec<super::S
     if config.semantic {
         println!("{} Búsqueda SEMÁNTICA (TF-IDF)", "🧠".cyan());
     } else {
-        println!("{} Búsqueda por TEXTO", "🔍".cyan());
+        println!("{} Búsqueda por TEXTO (multi-hilo ⚡)", "🔍".cyan());
     }
     println!("  Query: '{}'", config.query);
 
@@ -430,10 +429,7 @@ pub fn search_files(config: SearchConfigInternal) -> anyhow::Result<Vec<super::S
         println!("  {} Modo interactivo activado", "🎮".blue());
     }
 
-    let encontrados = Arc::new(std::sync::atomic::AtomicUsize::new(0));
-    let total_ocurrencias = Arc::new(std::sync::atomic::AtomicUsize::new(0));
     let total_archivos = cache.entries.len();
-    let mut search_results: Vec<super::SearchResult> = Vec::new();
 
     if config.verbose {
         println!("{} Revisando {} archivos...", "📄".blue(), total_archivos);
@@ -457,166 +453,196 @@ pub fn search_files(config: SearchConfigInternal) -> anyhow::Result<Vec<super::S
         None
     };
 
-    let entries: Vec<(&PathBuf, &crate::cache::CacheEntry)> = cache.entries.iter().collect();
+    // 👇 NUEVO: Procesar archivos en paralelo con Rayon
+    let encontrados = Arc::new(AtomicUsize::new(0));
+    let total_ocurrencias = Arc::new(AtomicUsize::new(0));
 
-    for (i, (p, entry)) in entries.iter().enumerate() {
-        if config.verbose {
-            print!("\r  Progreso: {}/{}", i + 1, total_archivos);
-        }
+    let query_regex_ref = query_regex.as_ref();
+    let query_words_ref = query_words.as_ref();
+    let ext_filter_ref = ext_filter.as_ref();
+    let ignore_pattern_ref = config.ignore_pattern.as_ref();
+    let query_ref = config.query.as_str();
+    let ignore_case = config.ignore_case;
+    let exact = config.exact;
+    let extract = config.extract;
+    let interactive = config.interactive;
+    let semantic = config.semantic;
 
-        if let Some(ref pattern) = config.ignore_pattern {
-            if matches_pattern(p, pattern) {
-                continue;
-            }
-        }
-
-        if let Some(max_size) = max_size_bytes {
-            if entry.size > max_size {
-                continue;
-            }
-        }
-
-        let should_include = if let Some(ref exts) = ext_filter {
-            p.extension()
-                .and_then(|e| e.to_str())
-                .map(|e| exts.contains(&e))
-                .unwrap_or(false)
-        } else {
-            true
-        };
-
-        if !should_include {
-            continue;
-        }
-
-        let content_to_search = if config.extract {
-            if let Ok(Some(extracted)) = extract_archive_content(p) {
-                extracted
-            } else {
-                entry.content.clone()
-            }
-        } else {
-            entry.content.clone()
-        };
-
-        if config.semantic {
-            if let Some(q_vec) = &query_words {
-                let entry_vec = get_word_vector(&content_to_search);
-                let similarity = cosine_similarity(q_vec, &entry_vec);
-
-                if similarity > 0.15 {
-                    encontrados.fetch_add(1, Ordering::SeqCst);
-                    total_ocurrencias.fetch_add(1, Ordering::SeqCst);
-
-                    let ocurrencias = entry_vec.values().sum::<u32>();
-                    search_results.push(super::SearchResult {
-                        path: p.to_path_buf(),
-                        content: content_to_search.clone(),
-                        matches: ocurrencias as usize,
-                        size: entry.size,
-                        line_start: None,
-                        line_end: None,
-                        score: Some(similarity),
-                        keywords: entry_vec.keys().cloned().collect(), // 👈 CORREGIDO
-                    });
-
-                    if !config.interactive {
-                        println!(
-                            "\n{} [Similitud: {:.2}%] ({} palabras clave) [{}]",
-                            p.display().to_string().green(),
-                            similarity * 100.0,
-                            ocurrencias,
-                            format_size(entry.size).dimmed()
-                        );
-                        let preview: String = content_to_search
-                            .lines()
-                            .take(3)
-                            .collect::<Vec<_>>()
-                            .join("\n");
-                        println!("  {}", preview);
-                    }
+    let mut search_results: Vec<super::SearchResult> = cache
+        .entries
+        .par_iter()
+        .filter_map(|(p, entry)| {
+            // Filtro de ignore_pattern
+            if let Some(pattern) = ignore_pattern_ref {
+                if matches_pattern(p, pattern) {
+                    return None;
                 }
             }
-        } else {
-            if let Some(re) = &query_regex {
-                let matches: Vec<_> = re.find_iter(&content_to_search).collect();
-                if !matches.is_empty() {
-                    encontrados.fetch_add(1, Ordering::SeqCst);
-                    total_ocurrencias.fetch_add(matches.len(), Ordering::SeqCst);
 
-                    let first_match = matches.first().map(|m| m.start());
-                    let last_match = matches.last().map(|m| m.end());
-                    let (line_start, line_end) =
-                        if let (Some(start), Some(end)) = (first_match, last_match) {
-                            let content_before = &content_to_search[..start];
-                            let line_start = content_before.lines().count();
-                            let content_until = &content_to_search[..end];
-                            let line_end = content_until.lines().count();
-                            (Some(line_start), Some(line_end))
-                        } else {
-                            (None, None)
-                        };
+            // Filtro de tamaño
+            if let Some(max_size) = max_size_bytes {
+                if entry.size > max_size {
+                    return None;
+                }
+            }
 
-                    search_results.push(super::SearchResult {
-                        path: p.to_path_buf(),
-                        content: content_to_search.clone(),
-                        matches: matches.len(),
-                        size: entry.size,
-                        line_start,
-                        line_end,
-                        score: None,
-                        keywords: Vec::new(),
-                    });
+            // Filtro de extensión
+            let should_include = if let Some(exts) = ext_filter_ref {
+                p.extension()
+                    .and_then(|e| e.to_str())
+                    .map(|e| exts.contains(&e))
+                    .unwrap_or(false)
+            } else {
+                true
+            };
 
-                    if !config.interactive {
-                        println!(
-                            "\n{} ({} coincidencias) [{}]",
-                            p.display().to_string().green(),
-                            matches.len(),
-                            format_size(entry.size).dimmed()
-                        );
+            if !should_include {
+                return None;
+            }
 
-                        let lineas: Vec<String> = content_to_search
-                            .lines()
-                            .enumerate()
-                            .filter_map(|(num, line)| {
-                                if re.is_match(line) {
-                                    let line_num = format!("{}:", num + 1).yellow();
-                                    let highlighted = if config.ignore_case {
-                                        let re_ignore = Regex::new(&format!(
-                                            r"(?i){}",
-                                            regex::escape(&config.query)
-                                        ))
-                                        .unwrap();
-                                        re_ignore
-                                            .replace_all(line, |caps: &regex::Captures| {
-                                                caps[0].to_string().red().to_string()
-                                            })
-                                            .to_string()
-                                    } else if config.exact {
-                                        let re_exact = Regex::new(&format!(
-                                            r"\b{}\b",
-                                            regex::escape(&config.query)
-                                        ))
-                                        .unwrap();
-                                        re_exact
-                                            .replace_all(line, |caps: &regex::Captures| {
-                                                caps[0].to_string().red().to_string()
-                                            })
-                                            .to_string()
-                                    } else {
-                                        line.replace(&config.query, &config.query.red().to_string())
-                                    };
-                                    Some(format!("  {} {}", line_num, highlighted))
+            // Contenido a buscar (con extracción si aplica)
+            let content_to_search = if extract {
+                if let Ok(Some(extracted)) = extract_archive_content(p) {
+                    extracted
+                } else {
+                    entry.content.clone()
+                }
+            } else {
+                entry.content.clone()
+            };
+
+            // Búsqueda semántica
+            if semantic {
+                if let Some(q_vec) = query_words_ref {
+                    let entry_vec = get_word_vector(&content_to_search);
+                    let similarity = cosine_similarity(q_vec, &entry_vec);
+
+                    if similarity > 0.15 {
+                        encontrados.fetch_add(1, Ordering::SeqCst);
+                        total_ocurrencias.fetch_add(1, Ordering::SeqCst);
+
+                        let ocurrencias = entry_vec.values().sum::<u32>();
+                        return Some(super::SearchResult {
+                            path: p.to_path_buf(),
+                            content: content_to_search.clone(),
+                            matches: ocurrencias as usize,
+                            size: entry.size,
+                            line_start: None,
+                            line_end: None,
+                            score: Some(similarity),
+                            keywords: entry_vec.keys().cloned().collect(),
+                        });
+                    }
+                }
+                None
+            } else {
+                // Búsqueda por texto
+                if let Some(re) = query_regex_ref {
+                    let matches: Vec<_> = re.find_iter(&content_to_search).collect();
+                    if !matches.is_empty() {
+                        encontrados.fetch_add(1, Ordering::SeqCst);
+                        total_ocurrencias.fetch_add(matches.len(), Ordering::SeqCst);
+
+                        let first_match = matches.first().map(|m| m.start());
+                        let last_match = matches.last().map(|m| m.end());
+                        let (line_start, line_end) =
+                            if let (Some(start), Some(end)) = (first_match, last_match) {
+                                let content_before = &content_to_search[..start];
+                                let line_start = content_before.lines().count();
+                                let content_until = &content_to_search[..end];
+                                let line_end = content_until.lines().count();
+                                (Some(line_start), Some(line_end))
+                            } else {
+                                (None, None)
+                            };
+
+                        Some(super::SearchResult {
+                            path: p.to_path_buf(),
+                            content: content_to_search.clone(),
+                            matches: matches.len(),
+                            size: entry.size,
+                            line_start,
+                            line_end,
+                            score: None,
+                            keywords: Vec::new(),
+                        })
+                    } else {
+                        None
+                    }
+                } else {
+                    None
+                }
+            }
+        })
+        .collect();
+
+    // Ordenar resultados por cantidad de coincidencias (descendente)
+    search_results.sort_by_key(|a| std::cmp::Reverse(a.matches));
+
+    // Mostrar resultados si NO es modo interactivo
+    if !interactive {
+        for result in &search_results {
+            if semantic {
+                println!(
+                    "\n{} [Similitud: {:.2}%] ({} palabras clave) [{}]",
+                    result.path.display().to_string().green(),
+                    result.score.unwrap_or(0.0) * 100.0,
+                    result.matches,
+                    format_size(result.size).dimmed()
+                );
+                let preview: String = result
+                    .content
+                    .lines()
+                    .take(3)
+                    .collect::<Vec<_>>()
+                    .join("\n");
+                println!("  {}", preview);
+            } else {
+                println!(
+                    "\n{} ({} coincidencias) [{}]",
+                    result.path.display().to_string().green(),
+                    result.matches,
+                    format_size(result.size).dimmed()
+                );
+
+                if let Some(re) = query_regex_ref {
+                    let lineas: Vec<String> = result
+                        .content
+                        .lines()
+                        .enumerate()
+                        .filter_map(|(num, line)| {
+                            if re.is_match(line) {
+                                let line_num = format!("{}:", num + 1).yellow();
+                                let highlighted = if ignore_case {
+                                    let re_ignore =
+                                        Regex::new(&format!(r"(?i){}", regex::escape(query_ref)))
+                                            .unwrap();
+                                    re_ignore
+                                        .replace_all(line, |caps: &regex::Captures| {
+                                            caps[0].to_string().red().to_string()
+                                        })
+                                        .to_string()
+                                } else if exact {
+                                    let re_exact =
+                                        Regex::new(&format!(r"\b{}\b", regex::escape(query_ref)))
+                                            .unwrap();
+                                    re_exact
+                                        .replace_all(line, |caps: &regex::Captures| {
+                                            caps[0].to_string().red().to_string()
+                                        })
+                                        .to_string()
                                 } else {
-                                    None
-                                }
-                            })
-                            .collect();
+                                    line.replace(query_ref, &query_ref.red().to_string())
+                                };
+                                Some(format!("  {} {}", line_num, highlighted))
+                            } else {
+                                None
+                            }
+                        })
+                        .collect();
 
-                        if !lineas.is_empty() {
-                            println!("{}", lineas.join("\n"));
-                        }
+                    if !lineas.is_empty() {
+                        println!("{}", lineas.join("\n"));
                     }
                 }
             }
@@ -657,6 +683,11 @@ pub fn search_files(config: SearchConfigInternal) -> anyhow::Result<Vec<super::S
             );
             println!("  {} Coincidencias totales: {}", "•".cyan(), total_matches);
             println!("  {} Tiempo: {:.2}s", "•".cyan(), elapsed.as_secs_f32());
+            println!(
+                "  {} Núcleos usados: {}",
+                "⚡".cyan(),
+                rayon::current_num_threads()
+            );
         } else {
             println!(
                 "\n{} Encontrados {} archivos.",

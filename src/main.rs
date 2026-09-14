@@ -2,8 +2,10 @@
 
 use clap::Parser;
 use colored::*;
-use semcode_search::cli::{AliasAction, Cli, Commands};
+use semcode_search::cli::{AliasAction, Cli, Commands, HistoryAction};
 use semcode_search::core::{index_files, search_files, SearchConfigInternal};
+use semcode_search::history::History;
+use semcode_search::watch::Watcher;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs;
@@ -207,6 +209,33 @@ fn main() -> anyhow::Result<()> {
             }
         }
 
+        Commands::Stats => {
+            show_stats()?;
+        }
+
+        Commands::History(action) => match action {
+            HistoryAction::List { limit } => {
+                show_history(limit)?;
+            }
+            HistoryAction::Clear => {
+                History::clear()?;
+                println!("{} Historial limpiado.", "🗑️".green());
+            }
+            HistoryAction::Last => {
+                if let Some(entry) = History::last()? {
+                    println!("{} Última búsqueda:", "🕐".cyan());
+                    println!("  Query: {}", entry.query.green());
+                    println!("  Fecha: {}", entry.timestamp.dimmed());
+                    println!(
+                        "\n💡 Para repetir: semcode-search search --query \"{}\"",
+                        entry.query
+                    );
+                } else {
+                    println!("{} No hay búsquedas en el historial.", "📭".yellow());
+                }
+            }
+        },
+
         Commands::Index {
             path,
             ignore,
@@ -223,6 +252,16 @@ fn main() -> anyhow::Result<()> {
                 ignore_pattern.as_deref(),
                 force,
             )?;
+        }
+
+        Commands::Watch {
+            path,
+            ignore,
+            interval,
+        } => {
+            let ignore_dirs: Vec<String> = ignore.split(',').map(|s| s.to_string()).collect();
+            let mut watcher = Watcher::new(&path, ignore_dirs, interval);
+            watcher.run()?;
         }
 
         Commands::Search {
@@ -341,8 +380,28 @@ fn main() -> anyhow::Result<()> {
                 }
             };
 
+            // Si la query es "!!", repetir la última búsqueda
+            let final_query = if query_str == "!!" {
+                if let Some(last) = History::last()? {
+                    println!(
+                        "{} Repitiendo última búsqueda: '{}'",
+                        "🔄".cyan(),
+                        last.query
+                    );
+                    last.query
+                } else {
+                    println!("{} No hay búsquedas anteriores.", "⚠️".yellow());
+                    return Ok(());
+                }
+            } else {
+                query_str
+            };
+
+            // Guardar en el historial
+            let _ = History::add(&final_query);
+
             let search_config = SearchConfigInternal {
-                query: query_str,
+                query: final_query,
                 path,
                 ext: ext_vec,
                 ignore: ignore_vec,
@@ -364,4 +423,132 @@ fn main() -> anyhow::Result<()> {
     }
 
     Ok(())
+}
+
+// ===== Función para mostrar estadísticas (v2.0.0) =====
+
+fn show_stats() -> anyhow::Result<()> {
+    use semcode_search::Cache;
+    use std::path::Path;
+
+    let cache_path = Path::new(".semantic-index.json");
+
+    if !cache_path.exists() {
+        println!(
+            "{} No hay caché. Ejecuta 'semcode-search index --path .' primero.",
+            "⚠️".yellow()
+        );
+        return Ok(());
+    }
+
+    let cache = Cache::load(cache_path)?;
+
+    let total_files = cache.entries.len();
+    let total_size: u64 = cache.entries.values().map(|e| e.size).sum();
+    let total_lines: usize = cache
+        .entries
+        .values()
+        .map(|e| e.content.lines().count())
+        .sum();
+
+    let mut extensions: std::collections::HashMap<String, (usize, u64)> =
+        std::collections::HashMap::new();
+    for entry in cache.entries.values() {
+        if let Some(ext) = entry.path.extension().and_then(|e| e.to_str()) {
+            let counter = extensions.entry(ext.to_string()).or_insert((0, 0));
+            counter.0 += 1;
+            counter.1 += entry.size;
+        }
+    }
+
+    println!(
+        "\n{} {}",
+        "📊".blue(),
+        "Estadísticas de semcode-search".bold()
+    );
+    println!("{}", "─".repeat(50).dimmed());
+    println!(
+        "  {} Archivos indexados: {}",
+        "📁".cyan(),
+        total_files.to_string().green()
+    );
+    println!(
+        "  {} Total de líneas: {}",
+        "📝".cyan(),
+        total_lines.to_string().green()
+    );
+    println!(
+        "  {} Tamaño total: {}",
+        "💾".cyan(),
+        format_size_bytes(total_size).green()
+    );
+    println!("\n  {} Lenguajes:", "🔤".cyan());
+
+    let mut sorted_exts: Vec<_> = extensions.iter().collect();
+    sorted_exts.sort_by_key(|a| std::cmp::Reverse(a.1 .0));
+
+    let total_for_pct = total_files as f32;
+    for (ext, (count, size)) in sorted_exts {
+        let pct = (*count as f32 / total_for_pct) * 100.0;
+        println!(
+            "    ├── {}: {} archivos ({:.0}%) [{}]",
+            ext.green(),
+            count.to_string().yellow(),
+            pct,
+            format_size_bytes(*size).dimmed()
+        );
+    }
+
+    println!(
+        "\n  {} Última indexación: {}",
+        "🕐".cyan(),
+        cache.updated.dimmed()
+    );
+    println!("{}", "─".repeat(50).dimmed());
+
+    Ok(())
+}
+
+// ===== Función para mostrar historial (v2.0.0) =====
+
+fn show_history(limit: usize) -> anyhow::Result<()> {
+    let history = History::list()?;
+
+    if history.is_empty() {
+        println!("{} No hay búsquedas en el historial.", "📭".yellow());
+        return Ok(());
+    }
+
+    println!("\n{} {}", "🕐".blue(), "Historial de búsquedas".bold());
+    println!("{}", "─".repeat(50).dimmed());
+
+    for (i, entry) in history.iter().take(limit).enumerate() {
+        println!(
+            "  {}. {} {}",
+            (i + 1).to_string().yellow(),
+            entry.query.green(),
+            format!("({})", entry.timestamp).dimmed()
+        );
+    }
+
+    println!("{}", "─".repeat(50).dimmed());
+    println!(
+        "  {} Total: {} búsquedas",
+        "📊".cyan(),
+        history.len().to_string().green()
+    );
+
+    Ok(())
+}
+
+fn format_size_bytes(bytes: u64) -> String {
+    if bytes < 1024 {
+        format!("{} B", bytes)
+    } else if bytes < 1024 * 1024 {
+        format!("{:.1} KB", bytes as f64 / 1024.0)
+    } else if bytes < 1024 * 1024 * 1024 {
+        format!("{:.1} MB", bytes as f64 / (1024.0 * 1024.0))
+    } else {
+        format!("{:.1} GB", bytes as f64 / (1024.0 * 1024.0 * 1024.0))
+    }
 }

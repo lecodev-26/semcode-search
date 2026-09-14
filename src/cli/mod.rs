@@ -4,7 +4,7 @@ use clap::{Parser, Subcommand};
 
 #[derive(Parser)]
 #[command(name = "semcode-search")]
-#[command(version = "1.0.0")]
+#[command(version = "2.0.0")]
 #[command(about = "🔍 Fast semantic code search with TF-IDF, caching, and advanced filtering")]
 pub struct Cli {
     #[command(subcommand)]
@@ -23,6 +23,13 @@ pub enum Commands {
     /// Gestionar alias para búsquedas
     #[command(subcommand)]
     Alias(AliasAction),
+
+    /// Mostrar estadísticas del proyecto indexado
+    Stats,
+
+    /// Gestionar historial de búsquedas
+    #[command(subcommand)]
+    History(HistoryAction),
 
     /// Indexar archivos y guardar caché
     Index {
@@ -47,9 +54,24 @@ pub enum Commands {
         ignore_pattern: Option<String>,
     },
 
+    /// Observar cambios y reindexar automáticamente
+    Watch {
+        /// Ruta a observar
+        #[arg(short, long, default_value = ".")]
+        path: String,
+
+        /// Carpetas a ignorar (comma-separated)
+        #[arg(short, long, default_value = ".git,target,node_modules,dist,build")]
+        ignore: String,
+
+        /// Intervalo en segundos entre comprobaciones
+        #[arg(short, long, default_value_t = 3)]
+        interval: u64,
+    },
+
     /// Buscar en archivos
     Search {
-        /// Término de búsqueda
+        /// Término de búsqueda (usa !! para repetir la última)
         #[arg(short, long)]
         query: Option<String>,
 
@@ -151,4 +173,20 @@ pub enum AliasAction {
         /// Nombre del alias
         name: String,
     },
+}
+
+#[derive(Subcommand, Debug, Clone)]
+pub enum HistoryAction {
+    /// Listar las últimas búsquedas
+    List {
+        /// Número de búsquedas a mostrar (por defecto: 20)
+        #[arg(short, long, default_value_t = 20)]
+        limit: usize,
+    },
+
+    /// Limpiar el historial
+    Clear,
+
+    /// Repetir la última búsqueda
+    Last,
 }
