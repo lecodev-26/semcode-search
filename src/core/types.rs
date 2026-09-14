@@ -1,9 +1,9 @@
-//! Tipos públicos de la biblioteca
+//! Tipos pblicos de la biblioteca
 
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 
-/// Resultado de una búsqueda
+/// Resultado de una bsqueda
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SearchResult {
     /// Ruta del archivo
@@ -12,26 +12,26 @@ pub struct SearchResult {
     /// Contenido del archivo (o fragmento)
     pub content: String,
 
-    /// Número de coincidencias
+    /// Nmero de coincidencias
     pub matches: usize,
 
-    /// Tamaño del archivo en bytes
+    /// Tamao del archivo en bytes
     pub size: u64,
 
-    /// Línea de inicio de la coincidencia
+    /// Lnea de inicio de la coincidencia
     pub line_start: Option<usize>,
 
-    /// Línea de fin de la coincidencia
+    /// Lnea de fin de la coincidencia
     pub line_end: Option<usize>,
 
-    /// Puntuación de similitud (para búsqueda semántica)
+    /// Puntuacin de similitud (para bsqueda semntica)
     pub score: Option<f32>,
 
-    /// Lista de palabras clave relevantes (para búsqueda semántica)
+    /// Lista de palabras clave relevantes (para bsqueda semntica)
     pub keywords: Vec<String>,
 }
 
-/// Configuración del motor de búsqueda
+/// Configuracin del motor de bsqueda
 #[derive(Debug, Clone)]
 pub struct SearchConfig {
     /// Ruta a buscar
@@ -43,25 +43,25 @@ pub struct SearchConfig {
     /// Carpetas a ignorar
     pub ignore_dirs: Vec<String>,
 
-    /// Búsqueda exacta (palabra completa)
+    /// Bsqueda exacta (palabra completa)
     pub exact: bool,
 
-    /// Ignorar mayúsculas/minúsculas
+    /// Ignorar maysculas/minsculas
     pub ignore_case: bool,
 
     /// Modo verboso
     pub verbose: bool,
 
-    /// Ignorar caché
+    /// Ignorar cach
     pub no_cache: bool,
 
     /// Mostrar resumen
     pub summary: bool,
 
-    /// Tamaño máximo de archivo
+    /// Tamao mximo de archivo
     pub max_size: Option<String>,
 
-    /// Patrón glob para ignorar archivos
+    /// Patrn glob para ignorar archivos
     pub ignore_pattern: Option<String>,
 
     /// Modo interactivo

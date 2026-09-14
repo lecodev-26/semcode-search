@@ -1,4 +1,4 @@
-//! Módulo TUI - Interfaz gráfica en terminal
+//! Mdulo TUI - Interfaz grfica en terminal
 
 use anyhow::Result;
 use crossterm::{
@@ -19,7 +19,7 @@ use std::path::Path;
 
 use crate::cache::Cache;
 
-/// Estado de la aplicación TUI
+/// Estado de la aplicacin TUI
 struct App {
     query: String,
     results: Vec<SearchResultView>,
@@ -54,7 +54,7 @@ impl App {
 
         if !cache_path.exists() {
             self.results = vec![SearchResultView {
-                path: "⚠️ No hay caché indexada. Sal y ejecuta 'index' primero.".to_string(),
+                path: " No hay cach indexada. Sal y ejecuta 'index' primero.".to_string(),
                 matches: 0,
                 size: 0,
                 preview: String::new(),
@@ -90,12 +90,7 @@ impl App {
                             path: p.display().to_string(),
                             matches,
                             size: e.size,
-                            preview: e
-                                .content
-                                .lines()
-                                .take(15)
-                                .collect::<Vec<_>>()
-                                .join("\n"),
+                            preview: e.content.lines().take(15).collect::<Vec<_>>().join("\n"),
                         })
                     } else {
                         None
@@ -158,7 +153,7 @@ fn ui(f: &mut Frame, app: &mut App) {
     // Header
     let header = Paragraph::new(vec![Line::from(vec![
         Span::styled(
-            "🔍 semcode-search",
+            " semcode-search",
             Style::default()
                 .fg(Color::Cyan)
                 .add_modifier(Modifier::BOLD),
@@ -182,7 +177,7 @@ fn ui(f: &mut Frame, app: &mut App) {
             Block::default()
                 .borders(Borders::ALL)
                 .border_style(Style::default().fg(Color::Yellow))
-                .title(" 🔎 Search (Enter to search) "),
+                .title("  Search (Enter to search) "),
         );
     f.render_widget(input, chunks[1]);
 
@@ -206,7 +201,7 @@ fn ui(f: &mut Frame, app: &mut App) {
             } else {
                 Style::default().fg(Color::White)
             };
-            let prefix = if is_selected { "▶ " } else { "  " };
+            let prefix = if is_selected { " " } else { "  " };
             ListItem::new(format!("{}{} ({} coinc.)", prefix, r.path, r.matches)).style(style)
         })
         .collect();
@@ -215,14 +210,14 @@ fn ui(f: &mut Frame, app: &mut App) {
         Block::default()
             .borders(Borders::ALL)
             .border_style(Style::default().fg(Color::Blue))
-            .title(format!(" 📄 Results ({}) ", app.results.len())),
+            .title(format!("  Results ({}) ", app.results.len())),
     );
     f.render_stateful_widget(results_list, main_chunks[0], &mut app.list_state);
 
     // Preview
     let preview_content = if let Some(result) = app.current() {
         format!(
-            "📄 {}\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n📊 Coincidencias: {}\n💾 Tamaño: {}\n\n{}",
+            " {}\n\n Coincidencias: {}\n Tamao: {}\n\n{}",
             result.path,
             result.matches,
             format_size(result.size),
@@ -239,13 +234,13 @@ fn ui(f: &mut Frame, app: &mut App) {
             Block::default()
                 .borders(Borders::ALL)
                 .border_style(Style::default().fg(Color::Magenta))
-                .title(" 👁️ Preview "),
+                .title("  Preview "),
         );
     f.render_widget(preview, main_chunks[1]);
 
     // Footer
     let footer = Paragraph::new(Line::from(vec![
-        Span::styled(" ↑/↓ ", Style::default().fg(Color::Green)),
+        Span::styled(" / ", Style::default().fg(Color::Green)),
         Span::raw("navegar  "),
         Span::styled(" Enter ", Style::default().fg(Color::Green)),
         Span::raw("buscar  "),

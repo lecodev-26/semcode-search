@@ -19,6 +19,18 @@ categories = [
     "command-line-utilities",
     "development-tools"
 ]
+exclude = [
+    "gui/",
+    "plugins/",
+    "logo.png",
+    ".fastembed_cache/",
+    "target/",
+    ".semantic-index.json",
+    "docs/",
+    "examples/",
+    "scripts/",
+    "docker/"
+]
 
 [features]
 default = []

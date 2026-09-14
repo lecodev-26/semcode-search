@@ -1,4 +1,4 @@
-//! Módulo Cache - Gestión de la caché
+//! Mdulo Cache - Gestin de la cach
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -12,7 +12,7 @@ pub struct CacheEntry {
     pub modified: u64,
     pub words: Vec<String>,
     pub size: u64,
-    /// 👇 NUEVO: Embedding del archivo (opcional)
+    ///  NUEVO: Embedding del archivo (opcional)
     pub embedding: Option<Vec<f32>>,
 }
 
@@ -21,7 +21,7 @@ pub struct Cache {
     pub entries: HashMap<PathBuf, CacheEntry>,
     pub created: String,
     pub updated: String,
-    /// 👇 NUEVO: Indica si esta caché tiene embeddings
+    ///  NUEVO: Indica si esta cach tiene embeddings
     pub has_embeddings: bool,
 }
 
@@ -56,7 +56,7 @@ impl Cache {
         false
     }
 
-    /// Devuelve el número de entradas con embeddings
+    /// Devuelve el nmero de entradas con embeddings
     pub fn count_with_embeddings(&self) -> usize {
         self.entries
             .values()

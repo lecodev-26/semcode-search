@@ -2,26 +2,26 @@
 
 use thiserror::Error;
 
-/// Errores específicos de semcode-search
+/// Errores especficos de semcode-search
 #[derive(Error, Debug)]
 pub enum SearchError {
     /// Error de E/S al leer/escribir archivos
     #[error("I/O error: {0}")]
     Io(#[from] std::io::Error),
 
-    /// Error al parsear JSON de la caché
+    /// Error al parsear JSON de la cach
     #[error("JSON error: {0}")]
     Json(#[from] serde_json::Error),
 
-    /// Error al parsear TOML de la configuración
+    /// Error al parsear TOML de la configuracin
     #[error("TOML error: {0}")]
     Toml(#[from] toml::de::Error),
 
-    /// Error al parsear un tamaño (ej: "1MB")
+    /// Error al parsear un tamao (ej: "1MB")
     #[error("Invalid size format: {0}")]
     InvalidSize(String),
 
-    /// Error al parsear una expresión regular
+    /// Error al parsear una expresin regular
     #[error("Invalid regex: {0}")]
     InvalidRegex(#[from] regex::Error),
 
@@ -29,7 +29,7 @@ pub enum SearchError {
     #[error("Invalid glob pattern: {0}")]
     InvalidGlob(String),
 
-    /// La caché no existe o está corrupta
+    /// La cach no existe o est corrupta
     #[error("Cache not found or corrupted. Run `index` first.")]
     CacheNotFound,
 

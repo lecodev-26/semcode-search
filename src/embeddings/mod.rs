@@ -1,6 +1,6 @@
-//! Módulo Embeddings - Búsqueda con IA real (opcional)
+//! Modulo Embeddings - Busqueda con IA real (opcional)
 //!
-//! Solo se compila si el feature `ai` está activado.
+//! Solo se compila si el feature `ai` esta activado.
 
 #[cfg(feature = "ai")]
 mod ai {
@@ -16,15 +16,14 @@ mod ai {
     impl Embedder {
         /// Crea un nuevo Embedder y descarga el modelo si es necesario
         pub fn new() -> Result<Self> {
-            println!("🧠 Cargando modelo de IA (la primera vez descarga ~90MB)...");
+            println!("Cargando modelo de IA (la primera vez descarga ~90MB)...");
 
             let model = TextEmbedding::try_new(
-                InitOptions::new(EmbeddingModel::AllMiniLML6V2)
-                    .with_show_download_progress(true),
+                InitOptions::new(EmbeddingModel::AllMiniLML6V2).with_show_download_progress(true),
             )?;
 
             let dimensions = 384;
-            println!("✅ Modelo cargado (dimensiones: {})", dimensions);
+            println!("Modelo cargado (dimensiones: {})", dimensions);
 
             Ok(Self { model, dimensions })
         }
@@ -35,7 +34,7 @@ mod ai {
             Ok(embeddings.into_iter().next().unwrap_or_default())
         }
 
-        /// Genera embeddings para múltiples textos (batch)
+        /// Genera embeddings para multiples textos (batch)
         pub fn embed_batch(&self, texts: Vec<&str>) -> Result<Vec<Vec<f32>>> {
             let embeddings = self.model.embed(texts, None)?;
             Ok(embeddings)
@@ -70,7 +69,7 @@ mod ai {
         dot / (norm_a * norm_b)
     }
 
-    /// Busca el archivo más parecido a la query usando embeddings
+    /// Busca el archivo mas parecido a la query usando embeddings
     pub fn semantic_search(
         query_embedding: &[f32],
         documents: &[(String, Vec<f32>)],
@@ -96,5 +95,5 @@ mod ai {
 #[cfg(feature = "ai")]
 pub use ai::*;
 
-/// Indica si el feature de IA está activado
+/// Indica si el feature de IA esta activado
 pub const AI_ENABLED: bool = cfg!(feature = "ai");

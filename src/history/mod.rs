@@ -1,4 +1,4 @@
-//! Módulo History - Historial de búsquedas
+//! Mdulo History - Historial de bsquedas
 
 use serde::{Deserialize, Serialize};
 use std::fs;
@@ -47,7 +47,7 @@ impl History {
         Ok(())
     }
 
-    /// Añadir una búsqueda al historial
+    /// Aadir una bsqueda al historial
     pub fn add(query: &str) -> anyhow::Result<()> {
         let mut data = Self::load()?;
 
@@ -63,7 +63,7 @@ impl History {
             timestamp: chrono::Local::now().format("%Y-%m-%d %H:%M:%S").to_string(),
         });
 
-        // Mantener solo las últimas 100 entradas
+        // Mantener solo las ltimas 100 entradas
         if data.entries.len() > 100 {
             let start = data.entries.len() - 100;
             data.entries = data.entries[start..].to_vec();
@@ -73,15 +73,15 @@ impl History {
         Ok(())
     }
 
-    /// Listar todas las búsquedas (más recientes primero)
+    /// Listar todas las bsquedas (ms recientes primero)
     pub fn list() -> anyhow::Result<Vec<HistoryEntry>> {
         let data = Self::load()?;
         let mut entries = data.entries;
-        entries.reverse(); // Más recientes primero
+        entries.reverse(); // Ms recientes primero
         Ok(entries)
     }
 
-    /// Obtener la última búsqueda
+    /// Obtener la ltima bsqueda
     pub fn last() -> anyhow::Result<Option<HistoryEntry>> {
         let data = Self::load()?;
         Ok(data.entries.last().cloned())

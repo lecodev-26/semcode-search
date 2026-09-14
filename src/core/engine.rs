@@ -1,25 +1,25 @@
-//! Motor de búsqueda principal
+//! Motor de bsqueda principal
 
 use crate::core::error::{Result, SearchError};
 use crate::core::search_files as core_search_files;
 use crate::core::types::{SearchConfig, SearchResult};
 use crate::core::SearchConfigInternal;
 
-/// Motor de búsqueda principal
+/// Motor de bsqueda principal
 #[derive(Debug, Clone)]
 pub struct SearchEngine {
     config: SearchConfig,
 }
 
 impl SearchEngine {
-    /// Crear un nuevo motor de búsqueda
+    /// Crear un nuevo motor de bsqueda
     pub fn new() -> Self {
         Self {
             config: SearchConfig::default(),
         }
     }
 
-    /// Crear un motor con configuración personalizada
+    /// Crear un motor con configuracin personalizada
     pub fn with_config(config: SearchConfig) -> Self {
         Self { config }
     }
@@ -43,7 +43,7 @@ impl SearchEngine {
             verbose: self.config.verbose,
             no_cache: self.config.no_cache,
             semantic: false,
-            ai: false, // 👈 NUEVO
+            ai: false, //  NUEVO
             file: None,
             summary: self.config.summary,
             max_size: self.config.max_size.clone(),
@@ -52,12 +52,11 @@ impl SearchEngine {
             interactive: self.config.interactive,
         };
 
-        let results =
-            core_search_files(config).map_err(|e| SearchError::Other(e.to_string()))?;
+        let results = core_search_files(config).map_err(|e| SearchError::Other(e.to_string()))?;
         Ok(results)
     }
 
-    /// Buscar semánticamente (TF-IDF)
+    /// Buscar semnticamente (TF-IDF)
     pub fn search_semantic(&self, query: &str) -> Result<Vec<SearchResult>> {
         let config = SearchConfigInternal {
             query: query.to_string(),
@@ -69,7 +68,7 @@ impl SearchEngine {
             verbose: self.config.verbose,
             no_cache: self.config.no_cache,
             semantic: true,
-            ai: false, // 👈 NUEVO
+            ai: false, //  NUEVO
             file: None,
             summary: self.config.summary,
             max_size: self.config.max_size.clone(),
@@ -78,8 +77,7 @@ impl SearchEngine {
             interactive: self.config.interactive,
         };
 
-        let results =
-            core_search_files(config).map_err(|e| SearchError::Other(e.to_string()))?;
+        let results = core_search_files(config).map_err(|e| SearchError::Other(e.to_string()))?;
         Ok(results)
     }
 
@@ -95,7 +93,7 @@ impl SearchEngine {
             verbose: self.config.verbose,
             no_cache: self.config.no_cache,
             semantic: false,
-            ai: false, // 👈 NUEVO
+            ai: false, //  NUEVO
             file: Some(pattern.to_string()),
             summary: self.config.summary,
             max_size: self.config.max_size.clone(),
@@ -104,17 +102,16 @@ impl SearchEngine {
             interactive: self.config.interactive,
         };
 
-        let results =
-            core_search_files(config).map_err(|e| SearchError::Other(e.to_string()))?;
+        let results = core_search_files(config).map_err(|e| SearchError::Other(e.to_string()))?;
         Ok(results)
     }
 
-    /// Obtener la configuración actual
+    /// Obtener la configuracin actual
     pub fn config(&self) -> &SearchConfig {
         &self.config
     }
 
-    /// Actualizar la configuración
+    /// Actualizar la configuracin
     pub fn set_config(&mut self, config: SearchConfig) {
         self.config = config;
     }

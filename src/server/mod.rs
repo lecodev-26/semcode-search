@@ -1,22 +1,16 @@
-//! Módulo Server - API REST con Axum
+//! Mdulo Server - API REST con Axum
 //!
 //! Expone una API HTTP para buscar desde cualquier herramienta.
 
 use anyhow::Result;
-use axum::{
-    extract::Query,
-    http::StatusCode,
-    response::Json,
-    routing::get,
-    Router,
-};
+use axum::{extract::Query, http::StatusCode, response::Json, routing::get, Router};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::Path;
 
 use crate::cache::Cache;
 
-/// Respuesta genérica de error
+/// Respuesta genrica de error
 #[derive(Serialize)]
 struct ErrorResponse {
     error: String,
@@ -134,13 +128,11 @@ async fn stats() -> Result<Json<StatsResponse>, (StatusCode, Json<ErrorResponse>
     let mut languages: HashMap<String, LanguageStats> = HashMap::new();
     for entry in cache.entries.values() {
         if let Some(ext) = entry.path.extension().and_then(|e| e.to_str()) {
-            let language = languages
-                .entry(ext.to_string())
-                .or_insert(LanguageStats {
-                    files: 0,
-                    size: 0,
-                    percentage: 0.0,
-                });
+            let language = languages.entry(ext.to_string()).or_insert(LanguageStats {
+                files: 0,
+                size: 0,
+                percentage: 0.0,
+            });
             language.files += 1;
             language.size += entry.size;
         }
@@ -196,7 +188,7 @@ async fn search(
     let limit = params.limit.unwrap_or(10);
     let semantic = params.semantic.unwrap_or(false);
 
-    // Búsqueda simple por texto
+    // Bsqueda simple por texto
     let query_lower = query.to_lowercase();
     let mut results: Vec<SearchResultJson> = cache
         .entries
@@ -205,12 +197,7 @@ async fn search(
             let content_lower = entry.content.to_lowercase();
             if content_lower.contains(&query_lower) {
                 let matches = content_lower.matches(&query_lower).count();
-                let preview: String = entry
-                    .content
-                    .lines()
-                    .take(5)
-                    .collect::<Vec<_>>()
-                    .join("\n");
+                let preview: String = entry.content.lines().take(5).collect::<Vec<_>>().join("\n");
 
                 Some(SearchResultJson {
                     path: path.display().to_string(),
@@ -245,14 +232,14 @@ pub async fn run_server(host: &str, port: u16) -> Result<()> {
         .route("/search", get(search));
 
     let addr = format!("{}:{}", host, port);
-    println!("🚀 Servidor iniciado en http://{}", addr);
+    println!(" Servidor iniciado en http://{}", addr);
     println!("   Presiona Ctrl+C para detener");
     println!();
     println!("   Endpoints disponibles:");
-    println!("   → GET http://{}/", addr);
-    println!("   → GET http://{}/health", addr);
-    println!("   → GET http://{}/stats", addr);
-    println!("   → GET http://{}/search?q=query", addr);
+    println!("    GET http://{}/", addr);
+    println!("    GET http://{}/health", addr);
+    println!("    GET http://{}/stats", addr);
+    println!("    GET http://{}/search?q=query", addr);
     println!();
 
     let listener = tokio::net::TcpListener::bind(&addr)

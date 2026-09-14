@@ -1,4 +1,4 @@
-//! Módulo Watch - Observa cambios y reindexa automáticamente
+//! Mdulo Watch - Observa cambios y reindexa automticamente
 
 use colored::*;
 use std::collections::HashMap;
@@ -9,7 +9,7 @@ pub struct Watcher {
     path: String,
     ignore_dirs: Vec<String>,
     interval: u64,
-    // Guarda: ruta del archivo -> (tamaño, última modificación)
+    // Guarda: ruta del archivo -> (tamao, ltima modificacin)
     file_states: HashMap<PathBuf, (u64, SystemTime)>,
 }
 
@@ -57,7 +57,7 @@ impl Watcher {
                 continue;
             }
 
-            // Verificar extensión soportada
+            // Verificar extensin soportada
             if let Some(ext) = p.extension().and_then(|e| e.to_str()) {
                 let exts = [
                     "rs", "py", "js", "ts", "go", "java", "c", "cpp", "h", "toml", "json", "txt",
@@ -79,7 +79,7 @@ impl Watcher {
         states
     }
 
-    /// Detectar qué archivos han cambiado
+    /// Detectar qu archivos han cambiado
     fn detect_changes(
         &self,
         old_states: &HashMap<PathBuf, (u64, SystemTime)>,
@@ -113,15 +113,11 @@ impl Watcher {
 
     /// Ejecutar el watcher
     pub fn run(&mut self) -> anyhow::Result<()> {
-        println!(
-            "{} Observando cambios en: {}",
-            "👁️".cyan(),
-            self.path.green()
-        );
-        println!("{} Intervalo: {} segundos", "⏱️".cyan(), self.interval);
+        println!("{} Observando cambios en: {}", "".cyan(), self.path.green());
+        println!("{} Intervalo: {} segundos", "".cyan(), self.interval);
 
-        // Indexación inicial
-        println!("\n{} Indexando por primera vez...", "📁".blue());
+        // Indexacin inicial
+        println!("\n{} Indexando por primera vez...", "".blue());
         let ignore_refs: Vec<&str> = self.ignore_dirs.iter().map(|s| s.as_str()).collect();
         crate::core::index_files(&self.path, ignore_refs, None, None, false)?;
 
@@ -129,7 +125,7 @@ impl Watcher {
         self.file_states = self.scan_files();
         println!(
             "\n{} Observando {} archivos... (Ctrl+C para salir)",
-            "🔄".cyan(),
+            "".cyan(),
             self.file_states.len()
         );
 
@@ -146,24 +142,24 @@ impl Watcher {
                 println!(
                     "\n[{}] {} {} cambios detectados",
                     timestamp.to_string().dimmed(),
-                    "⚠️".yellow(),
+                    "".yellow(),
                     changes.len()
                 );
 
                 for change in changes.iter().take(5) {
                     if let Some(name) = change.file_name().and_then(|n| n.to_str()) {
-                        println!("  {} {}", "→".dimmed(), name.dimmed());
+                        println!("  {} {}", "".dimmed(), name.dimmed());
                     }
                 }
                 if changes.len() > 5 {
                     println!(
-                        "  {} ...y {} más",
-                        "→".dimmed(),
+                        "  {} ...y {} ms",
+                        "".dimmed(),
                         (changes.len() - 5).to_string().dimmed()
                     );
                 }
 
-                println!("\n{} Reindexando...", "📁".blue());
+                println!("\n{} Reindexando...", "".blue());
                 let ignore_refs: Vec<&str> = self.ignore_dirs.iter().map(|s| s.as_str()).collect();
                 match crate::core::index_files(&self.path, ignore_refs, None, None, false) {
                     Ok(_) => {
@@ -171,11 +167,11 @@ impl Watcher {
                         println!(
                             "[{}] {} Reindexado completo\n",
                             timestamp.to_string().dimmed(),
-                            "✅".green()
+                            "".green()
                         );
                     }
                     Err(e) => {
-                        println!("{} Error al reindexar: {}\n", "❌".red(), e);
+                        println!("{} Error al reindexar: {}\n", "".red(), e);
                     }
                 }
 

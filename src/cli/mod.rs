@@ -1,11 +1,11 @@
-//! MÃƒÂ³dulo CLI - Comandos y argumentos
+//! Módulo CLI - Comandos y argumentos
 
 use clap::{Parser, Subcommand};
 
 #[derive(Parser)]
 #[command(name = "semcode-search")]
 #[command(version = "3.0.0")]
-#[command(about = "Ã°Å¸â€Â Fast semantic code search with TF-IDF, caching, and advanced filtering")]
+#[command(about = "Fast semantic code search with TF-IDF, caching, and advanced filtering")]
 pub struct Cli {
     #[command(subcommand)]
     pub command: Commands,
@@ -13,29 +13,33 @@ pub struct Cli {
 
 #[derive(Subcommand, Debug, Clone)]
 pub enum Commands {
-    /// Inicializar configuraciÃƒÂ³n
+    /// Inicializar configuración
     Init {
         #[arg(short, long)]
         force: bool,
     },
 
-    /// Gestionar alias para bÃƒÂºsquedas
+    /// Gestionar alias para búsquedas
     #[command(subcommand)]
     Alias(AliasAction),
 
-    /// Mostrar estadÃƒÂ­sticas del proyecto indexado
+    /// Mostrar estadísticas del proyecto indexado
     Stats,
 
-    /// Gestionar historial de bÃƒÂºsquedas
+    /// Gestionar historial de búsquedas
     #[command(subcommand)]
     History(HistoryAction),
 
-    /// Indexar archivos y guardar cachÃƒÂ©
+    /// Indexar archivos y guardar caché
     Index {
         #[arg(short, long, default_value = ".")]
         path: String,
 
-        #[arg(short, long, default_value = ".git,target,node_modules,dist,build,.fastembed_cache,.cache")]
+        #[arg(
+            short,
+            long,
+            default_value = ".git,target,node_modules,dist,build,.fastembed_cache,.cache"
+        )]
         ignore: String,
 
         #[arg(short, long)]
@@ -51,12 +55,16 @@ pub enum Commands {
         ai: bool,
     },
 
-    /// Observar cambios y reindexar automÃƒÂ¡ticamente
+    /// Observar cambios y reindexar automáticamente
     Watch {
         #[arg(short, long, default_value = ".")]
         path: String,
 
-        #[arg(short, long, default_value = ".git,target,node_modules,dist,build,.fastembed_cache,.cache")]
+        #[arg(
+            short,
+            long,
+            default_value = ".git,target,node_modules,dist,build,.fastembed_cache,.cache"
+        )]
         ignore: String,
 
         #[arg(short, long, default_value_t = 3)]
@@ -74,7 +82,7 @@ pub enum Commands {
         host: String,
     },
 
-    /// Interfaz grÃ¡fica en terminal (TUI) (requiere --features tui)
+    /// Interfaz gráfica en terminal (TUI) (requiere --features tui)
     Tui {
         /// Ruta del proyecto a buscar
         #[arg(short, long, default_value = ".")]
@@ -92,7 +100,11 @@ pub enum Commands {
         #[arg(short = 'e', long)]
         ext: Option<String>,
 
-        #[arg(short = 'i', long, default_value = ".git,target,node_modules,dist,build")]
+        #[arg(
+            short = 'i',
+            long,
+            default_value = ".git,target,node_modules,dist,build"
+        )]
         ignore: String,
 
         #[arg(long)]

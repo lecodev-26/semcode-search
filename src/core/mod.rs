@@ -1,15 +1,16 @@
-//! MÃ³dulo Core - LÃ³gica principal del buscador
-// SubmÃ³dulos privados
+//! Modulo Core - Logica principal del buscador
+
+// Submodulos privados
 mod engine;
 mod error;
 mod types;
 
-// Re-exportar API pÃºblica
+// Re-exportar API publica
 pub use engine::SearchEngine;
 pub use error::{Result, SearchError};
 pub use types::{SearchConfig, SearchResult};
 
-// ===== Funciones auxiliares y lÃ³gica principal =====
+// ===== Funciones auxiliares y logica principal =====
 
 use colored::*;
 use glob::Pattern;
@@ -117,7 +118,7 @@ pub fn interactive_mode(results: &[InternalSearchResult]) -> anyhow::Result<()> 
     use std::io::{self, Write};
 
     if results.is_empty() {
-        println!("{} No hay resultados para mostrar.", "âš ï¸".yellow());
+        println!("{} No hay resultados para mostrar.", "[!]".yellow());
         return Ok(());
     }
 
@@ -128,7 +129,7 @@ pub fn interactive_mode(results: &[InternalSearchResult]) -> anyhow::Result<()> 
         clear_screen();
         println!(
             "{} {} de {} (Presiona Enter para avanzar, q para salir)",
-            "ðŸ“–".cyan(),
+            "[>]".cyan(),
             idx + 1,
             total
         );
@@ -136,7 +137,7 @@ pub fn interactive_mode(results: &[InternalSearchResult]) -> anyhow::Result<()> 
         let result = &results[idx];
         println!("\n{}", result.path.display().to_string().green().bold());
         println!("  Coincidencias: {}", result.matches);
-        println!("  TamaÃ±o: {}", format_size(result.size));
+        println!("  Tamano: {}", format_size(result.size));
 
         let lines: Vec<&str> = result.content.lines().collect();
         let start = result.line_start.unwrap_or(0).saturating_sub(3);
@@ -171,7 +172,7 @@ pub fn interactive_mode(results: &[InternalSearchResult]) -> anyhow::Result<()> 
         if idx == 0 {
             println!(
                 "\n{} Has llegado al final. Volviendo al principio...",
-                "ðŸ”„".yellow()
+                "[*]".yellow()
             );
             std::thread::sleep(std::time::Duration::from_millis(500));
         }
@@ -185,7 +186,7 @@ fn clear_screen() {
     std::io::stdout().flush().unwrap();
 }
 
-// ===== ConfiguraciÃ³n interna para bÃºsqueda =====
+// ===== Configuracion interna para busqueda =====
 
 pub struct SearchConfigInternal {
     pub query: String,
@@ -197,7 +198,7 @@ pub struct SearchConfigInternal {
     pub verbose: bool,
     pub no_cache: bool,
     pub semantic: bool,
-    pub ai: bool,  // ðŸ‘ˆ NUEVO
+    pub ai: bool,
     pub file: Option<String>,
     pub summary: bool,
     pub max_size: Option<String>,
@@ -220,10 +221,10 @@ pub fn index_files(
     let cache_path = Path::new(".semantic-index.json");
     if force && cache_path.exists() {
         fs::remove_file(cache_path)?;
-        println!("{} CachÃ© eliminada.", "ðŸ—‘ï¸".yellow());
+        println!("{} Cache eliminada.", "[x]".yellow());
     }
 
-    println!("{} Indexando: {}", "ðŸ“".green(), path);
+    println!("{} Indexando: {}", "[*]".green(), path);
 
     let mut count = 0;
     let mut total_size = 0u64;
@@ -324,20 +325,20 @@ pub fn index_files(
     cache.updated = chrono::Local::now().to_string();
     cache.save(cache_path)?;
 
-    println!("{} Indexados {} archivos.", "âœ…".green(), count);
+    println!("{} Indexados {} archivos.", "[OK]".green(), count);
     if let Some(ref exts) = ext_filter {
-        println!("{} Filtro por extensiones: {:?}", "ðŸ“‹".blue(), exts);
+        println!("{} Filtro por extensiones: {:?}", "[i]".blue(), exts);
     }
     if let Some(ref pattern) = ignore_pattern {
-        println!("{} Ignorando patrÃ³n: {}", "ðŸš«".blue(), pattern);
+        println!("{} Ignorando patron: {}", "[!]".blue(), pattern);
     }
-    println!("{} TamaÃ±o total: {}", "ðŸ’¾".blue(), format_size(total_size));
-    println!("{} CachÃ© guardada en .semantic-index.json", "ðŸ’¾".green());
+    println!("{} Tamano total: {}", "[i]".blue(), format_size(total_size));
+    println!("{} Cache guardada en .semantic-index.json", "[i]".green());
 
     Ok(())
 }
 
-/// ðŸ‘‡ NUEVO: Indexar con embeddings de IA
+/// Indexar con embeddings de IA
 #[cfg(feature = "ai")]
 pub fn index_files_with_ai(
     path: &str,
@@ -352,12 +353,11 @@ pub fn index_files_with_ai(
     let cache_path = Path::new(".semantic-index.json");
     if force && cache_path.exists() {
         fs::remove_file(cache_path)?;
-        println!("{} CachÃ© eliminada.", "ðŸ—‘ï¸".yellow());
+        println!("{} Cache eliminada.", "[x]".yellow());
     }
 
-    println!("{} Indexando con IA: {}", "ðŸ“".green(), path);
+    println!("{} Indexando con IA: {}", "[*]".green(), path);
 
-    // Cargar modelo
     let embedder = Embedder::new()?;
 
     let mut count = 0;
@@ -416,8 +416,8 @@ pub fn index_files_with_ai(
         })
         .collect();
 
-    println!("ðŸ“„ Procesando {} archivos con IA...", files.len());
-    println!("   (esto puede tardar, se generan embeddings con IA)");
+    println!("Procesando {} archivos con IA...", files.len());
+    println!("   (esto puede tardar, se generan embeddings)");
 
     for (i, p) in files.iter().enumerate() {
         if let Ok(content) = fs::read_to_string(p) {
@@ -434,7 +434,6 @@ pub fn index_files_with_ai(
                     .filter(|w| w.len() > 2)
                     .collect();
 
-                // Generar embedding (limitando el contenido a 8000 caracteres)
                 let content_for_embedding = if content.len() > 8000 {
                     &content[..8000]
                 } else {
@@ -472,14 +471,18 @@ pub fn index_files_with_ai(
     cache.updated = chrono::Local::now().to_string();
     cache.save(cache_path)?;
 
-    println!("{} Indexados {} archivos con embeddings.", "âœ…".green(), count);
-    println!("{} TamaÃ±o total: {}", "ðŸ’¾".blue(), format_size(total_size));
-    println!("{} CachÃ© guardada en .semantic-index.json", "ðŸ’¾".green());
+    println!(
+        "{} Indexados {} archivos con embeddings.",
+        "[OK]".green(),
+        count
+    );
+    println!("{} Tamano total: {}", "[i]".blue(), format_size(total_size));
+    println!("{} Cache guardada en .semantic-index.json", "[i]".green());
 
     Ok(())
 }
 
-// ===== BÃºsqueda (AHORA MULTI-HILO) =====
+// ===== Busqueda (multi-hilo) =====
 
 pub fn search_files(config: SearchConfigInternal) -> anyhow::Result<Vec<super::SearchResult>> {
     use crate::cache::Cache;
@@ -493,14 +496,17 @@ pub fn search_files(config: SearchConfigInternal) -> anyhow::Result<Vec<super::S
         match Cache::load(cache_path) {
             Ok(c) => c,
             Err(_) => {
-                println!("{} CachÃ© corrupta. Ejecute 'index' primero.", "âš ï¸".yellow());
+                println!(
+                    "{} Cache corrupta. Ejecute 'index' primero.",
+                    "[!]".yellow()
+                );
                 return Ok(Vec::new());
             }
         }
     } else {
         println!(
-            "{} No se encontrÃ³ cachÃ©. Ejecute 'index' primero.",
-            "âš ï¸".yellow()
+            "{} No se encontro cache. Ejecute 'index' primero.",
+            "[!]".yellow()
         );
         return Ok(Vec::new());
     };
@@ -516,7 +522,6 @@ pub fn search_files(config: SearchConfigInternal) -> anyhow::Result<Vec<super::S
         .as_ref()
         .map(|e| e.iter().map(|s| s.as_str()).collect());
 
-    // BÃºsqueda por nombre de archivo
     if let Some(file_pattern) = &config.file {
         let found: Vec<PathBuf> = cache
             .entries
@@ -555,32 +560,33 @@ pub fn search_files(config: SearchConfigInternal) -> anyhow::Result<Vec<super::S
     }
 
     if config.semantic {
-        println!("{} BÃºsqueda SEMÃNTICA (TF-IDF)", "ðŸ§ ".cyan());
+        println!("{} Busqueda SEMANTICA (TF-IDF)", "[*]".cyan());
     } else {
-        println!("{} BÃºsqueda por TEXTO (multi-hilo âš¡)", "ðŸ”".cyan());
+        println!("{} Busqueda por TEXTO (multi-hilo)", "[*]".cyan());
     }
     println!("  Query: '{}'", config.query);
 
     if let Some(max_size) = max_size_bytes {
-        println!("  {} MÃ¡ximo tamaÃ±o: {}", "ðŸ“".blue(), format_size(max_size));
-    }
-    if let Some(ref pattern) = config.ignore_pattern {
-        println!("  {} Ignorando patrÃ³n: {}", "ðŸš«".blue(), pattern);
-    }
-    if config.extract {
         println!(
-            "  {} Buscando en archivos comprimidos (experimental)",
-            "ðŸ“¦".blue()
+            "  {} Tamano maximo: {}",
+            "[i]".blue(),
+            format_size(max_size)
         );
     }
+    if let Some(ref pattern) = config.ignore_pattern {
+        println!("  {} Ignorando patron: {}", "[!]".blue(), pattern);
+    }
+    if config.extract {
+        println!("  {} Buscando en archivos comprimidos", "[i]".blue());
+    }
     if config.interactive {
-        println!("  {} Modo interactivo activado", "ðŸŽ®".blue());
+        println!("  {} Modo interactivo activado", "[i]".blue());
     }
 
     let total_archivos = cache.entries.len();
 
     if config.verbose {
-        println!("{} Revisando {} archivos...", "ðŸ“„".blue(), total_archivos);
+        println!("{} Revisando {} archivos...", "[i]".blue(), total_archivos);
     }
 
     let query_words = if config.semantic {
@@ -601,7 +607,6 @@ pub fn search_files(config: SearchConfigInternal) -> anyhow::Result<Vec<super::S
         None
     };
 
-    // ðŸ‘‡ NUEVO: Procesar archivos en paralelo con Rayon
     let encontrados = Arc::new(AtomicUsize::new(0));
     let total_ocurrencias = Arc::new(AtomicUsize::new(0));
 
@@ -620,21 +625,18 @@ pub fn search_files(config: SearchConfigInternal) -> anyhow::Result<Vec<super::S
         .entries
         .par_iter()
         .filter_map(|(p, entry)| {
-            // Filtro de ignore_pattern
             if let Some(pattern) = ignore_pattern_ref {
                 if matches_pattern(p, pattern) {
                     return None;
                 }
             }
 
-            // Filtro de tamaÃ±o
             if let Some(max_size) = max_size_bytes {
                 if entry.size > max_size {
                     return None;
                 }
             }
 
-            // Filtro de extensiÃ³n
             let should_include = if let Some(exts) = ext_filter_ref {
                 p.extension()
                     .and_then(|e| e.to_str())
@@ -648,7 +650,6 @@ pub fn search_files(config: SearchConfigInternal) -> anyhow::Result<Vec<super::S
                 return None;
             }
 
-            // Contenido a buscar (con extracciÃ³n si aplica)
             let content_to_search = if extract {
                 if let Ok(Some(extracted)) = extract_archive_content(p) {
                     extracted
@@ -659,7 +660,6 @@ pub fn search_files(config: SearchConfigInternal) -> anyhow::Result<Vec<super::S
                 entry.content.clone()
             };
 
-            // BÃºsqueda semÃ¡ntica
             if semantic {
                 if let Some(q_vec) = query_words_ref {
                     let entry_vec = get_word_vector(&content_to_search);
@@ -684,7 +684,6 @@ pub fn search_files(config: SearchConfigInternal) -> anyhow::Result<Vec<super::S
                 }
                 None
             } else {
-                // BÃºsqueda por texto
                 if let Some(re) = query_regex_ref {
                     let matches: Vec<_> = re.find_iter(&content_to_search).collect();
                     if !matches.is_empty() {
@@ -724,10 +723,8 @@ pub fn search_files(config: SearchConfigInternal) -> anyhow::Result<Vec<super::S
         })
         .collect();
 
-    // Ordenar resultados por cantidad de coincidencias (descendente)
     search_results.sort_by_key(|a| std::cmp::Reverse(a.matches));
 
-    // Mostrar resultados si NO es modo interactivo
     if !interactive {
         for result in &search_results {
             if semantic {
@@ -820,26 +817,26 @@ pub fn search_files(config: SearchConfigInternal) -> anyhow::Result<Vec<super::S
             .collect();
         interactive_mode(&internal_results)?;
     } else if !config.interactive && total_encontrados == 0 {
-        println!("{} No se encontraron coincidencias.", "âš ï¸".yellow());
+        println!("{} No se encontraron coincidencias.", "[!]".yellow());
     } else if !config.interactive {
         if config.summary {
-            println!("\n{} {}", "ðŸ“Š".blue(), "Resumen:".bold());
+            println!("\n{} {}", "[#]".blue(), "Resumen:".bold());
             println!(
                 "  {} Archivos encontrados: {}",
-                "â€¢".cyan(),
+                "*".cyan(),
                 total_encontrados
             );
-            println!("  {} Coincidencias totales: {}", "â€¢".cyan(), total_matches);
-            println!("  {} Tiempo: {:.2}s", "â€¢".cyan(), elapsed.as_secs_f32());
+            println!("  {} Coincidencias totales: {}", "*".cyan(), total_matches);
+            println!("  {} Tiempo: {:.2}s", "*".cyan(), elapsed.as_secs_f32());
             println!(
-                "  {} NÃºcleos usados: {}",
-                "âš¡".cyan(),
+                "  {} Nucleos usados: {}",
+                "*".cyan(),
                 rayon::current_num_threads()
             );
         } else {
             println!(
                 "\n{} Encontrados {} archivos.",
-                "âœ…".green(),
+                "[OK]".green(),
                 total_encontrados
             );
         }
@@ -848,11 +845,12 @@ pub fn search_files(config: SearchConfigInternal) -> anyhow::Result<Vec<super::S
     Ok(search_results)
 }
 
-
-// ===== Búsqueda con IA (embeddings) =====
+// ===== Busqueda con IA (embeddings) =====
 
 #[cfg(feature = "ai")]
-pub fn search_files_with_ai(config: SearchConfigInternal) -> anyhow::Result<Vec<super::SearchResult>> {
+pub fn search_files_with_ai(
+    config: SearchConfigInternal,
+) -> anyhow::Result<Vec<super::SearchResult>> {
     use crate::cache::Cache;
     use crate::embeddings::{cosine_similarity, Embedder};
 
@@ -861,7 +859,10 @@ pub fn search_files_with_ai(config: SearchConfigInternal) -> anyhow::Result<Vec<
     let cache_path = Path::new(".semantic-index.json");
 
     if !cache_path.exists() {
-        println!("{} No se encontró caché. Ejecute 'index --ai' primero.", "??".yellow());
+        println!(
+            "{} No se encontro cache. Ejecute 'index --ai' primero.",
+            "[!]".yellow()
+        );
         return Ok(Vec::new());
     }
 
@@ -869,13 +870,13 @@ pub fn search_files_with_ai(config: SearchConfigInternal) -> anyhow::Result<Vec<
 
     if !cache.has_embeddings {
         println!(
-            "{} La caché no tiene embeddings. Ejecute 'index --ai' primero.",
-            "??".yellow()
+            "{} La cache no tiene embeddings. Ejecute 'index --ai' primero.",
+            "[!]".yellow()
         );
         return Ok(Vec::new());
     }
 
-    println!("{} Búsqueda con IA REAL (embeddings)", "??".cyan());
+    println!("{} Busqueda con IA REAL (embeddings)", "[*]".cyan());
     println!("  Query: '{}'", config.query);
 
     let embedder = Embedder::new()?;
@@ -883,7 +884,11 @@ pub fn search_files_with_ai(config: SearchConfigInternal) -> anyhow::Result<Vec<
 
     let total_archivos = cache.entries.len();
     if config.verbose {
-        println!("{} Comparando con {} archivos...", "??".blue(), total_archivos);
+        println!(
+            "{} Comparando con {} archivos...",
+            "[i]".blue(),
+            total_archivos
+        );
     }
 
     let mut scored_results: Vec<(super::SearchResult, f32)> = cache
@@ -942,16 +947,25 @@ pub fn search_files_with_ai(config: SearchConfigInternal) -> anyhow::Result<Vec<
             result.path.display().to_string().green(),
             similarity * 100.0
         );
-        let preview: String = result.content.lines().take(3).collect::<Vec<_>>().join("\n");
+        let preview: String = result
+            .content
+            .lines()
+            .take(3)
+            .collect::<Vec<_>>()
+            .join("\n");
         println!("  {}", preview.dimmed());
     }
 
     if total_encontrados == 0 {
-        println!("{} No se encontraron coincidencias con IA.", "??".yellow());
+        println!("{} No se encontraron coincidencias con IA.", "[!]".yellow());
     } else if config.summary {
-        println!("\n{} {}", "??".blue(), "Resumen:".bold());
-        println!("  {} Archivos encontrados: {}", "•".cyan(), total_encontrados);
-        println!("  {} Tiempo: {:.2}s", "•".cyan(), elapsed.as_secs_f32());
+        println!("\n{} {}", "[#]".blue(), "Resumen:".bold());
+        println!(
+            "  {} Archivos encontrados: {}",
+            "*".cyan(),
+            total_encontrados
+        );
+        println!("  {} Tiempo: {:.2}s", "*".cyan(), elapsed.as_secs_f32());
     }
 
     Ok(scored_results.into_iter().map(|(r, _)| r).collect())

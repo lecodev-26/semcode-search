@@ -1,4 +1,4 @@
-//! # semcode-search - Punto de entrada de la aplicaciÃ³n
+//! # semcode-search - Punto de entrada de la aplicación
 
 use clap::Parser;
 use colored::*;
@@ -13,7 +13,7 @@ use std::fs;
 use std::io::{self, Write};
 use std::path::PathBuf;
 
-// ===== ConfiguraciÃ³n =====
+// ===== Configuración =====
 
 #[derive(Debug, Serialize, Deserialize, Default)]
 pub struct Config {
@@ -123,32 +123,29 @@ fn show_welcome() {
     let tr = t();
 
     println!();
-    println!("{}", "â•".repeat(60).cyan());
+    println!("{}", "=".repeat(60).cyan());
     println!("  {}", tr.welcome_title.bold().cyan());
     println!("  {}", format!("v{}", env!("CARGO_PKG_VERSION")).green());
-    println!("{}", "â•".repeat(60).cyan());
+    println!("{}", "=".repeat(60).cyan());
     println!();
     println!("  {}", tr.welcome_message);
     println!();
-    println!("{}", "â”€".repeat(60).dimmed());
+    println!("{}", "-".repeat(60).dimmed());
     println!();
-    println!("  {}:", tr.more_info.green());
-    println!("    {}  semcode-search --help", "â†’".dimmed());
+    println!("  {}", tr.more_info.green());
+    println!("    semcode-search --help");
     println!();
     println!("  {}:", tr.languages.green());
-    println!("    {}  semcode-search index --path .", "â†’".dimmed());
-    println!(
-        "    {}  semcode-search search --query \"fn\" --path .",
-        "â†’".dimmed()
-    );
-    println!("    {}  semcode-search stats", "â†’".dimmed());
-    println!("    {}  semcode-search watch --path .", "â†’".dimmed());
+    println!("    semcode-search index --path .");
+    println!("    semcode-search search --query \"fn\" --path .");
+    println!("    semcode-search stats");
+    println!("    semcode-search watch --path .");
     println!();
-    println!("{}", "â”€".repeat(60).dimmed());
+    println!("{}", "-".repeat(60).dimmed());
     println!();
-    println!("  ðŸ”— https://github.com/lecodev-26/semcode-search");
+    println!("  https://github.com/lecodev-26/semcode-search");
     println!();
-    println!("{}", "â•".repeat(60).cyan());
+    println!("{}", "=".repeat(60).cyan());
     println!();
     print!("  {} ", tr.press_enter.yellow());
     io::stdout().flush().unwrap();
@@ -195,8 +192,14 @@ fn main() -> anyhow::Result<()> {
         Commands::Alias(action) => {
             let mut config = load_config()?;
             match action {
-                AliasAction::Save { name, query, params } => {
-                    config.aliases.insert(name.clone(), AliasEntry { query, params });
+                AliasAction::Save {
+                    name,
+                    query,
+                    params,
+                } => {
+                    config
+                        .aliases
+                        .insert(name.clone(), AliasEntry { query, params });
                     save_config(&config)?;
                     println!("{}: {}", tr.alias_saved.green(), name);
                 }
@@ -230,7 +233,7 @@ fn main() -> anyhow::Result<()> {
                         println!("  query: {}", entry.query);
                         println!("  params: {}", params_str);
                         println!(
-                            "ðŸ’¡ Para ejecutar manualmente: semcode-search search --query \"{}\" {}",
+                            "Para ejecutar manualmente: semcode-search search --query \"{}\" {}",
                             entry.query, params_str
                         );
                     } else {
@@ -258,7 +261,7 @@ fn main() -> anyhow::Result<()> {
                     println!("  Query: {}", entry.query.green());
                     println!("  Fecha: {}", entry.timestamp.dimmed());
                     println!(
-                        "\nðŸ’¡ Para repetir: semcode-search search --query \"{}\"",
+                        "\nPara repetir: semcode-search search --query \"{}\"",
                         entry.query
                     );
                 } else {
@@ -297,7 +300,7 @@ fn main() -> anyhow::Result<()> {
                 if ai {
                     println!(
                         "{} El flag --ai requiere compilar con: cargo build --release --features ai",
-                        "âš ï¸".yellow()
+                        "[!]".yellow()
                     );
                     return Ok(());
                 }
@@ -333,7 +336,7 @@ fn main() -> anyhow::Result<()> {
                 let _ = (port, host);
                 println!(
                     "{} El comando 'serve' requiere compilar con: cargo build --release --features server",
-                    "âš ï¸".yellow()
+                    "[!]".yellow()
                 );
             }
         }
@@ -348,7 +351,7 @@ fn main() -> anyhow::Result<()> {
                 let _ = path;
                 println!(
                     "{} El comando 'tui' requiere compilar con: cargo build --release --features tui",
-                    "âš ï¸".yellow()
+                    "[!]".yellow()
                 );
             }
         }
@@ -462,17 +465,17 @@ fn main() -> anyhow::Result<()> {
             let query_str = match query {
                 Some(q) => q,
                 None => {
-                    println!("âš ï¸ Error: no se pudo obtener la query.");
+                    println!("[!] Error: no se pudo obtener la query.");
                     return Ok(());
                 }
             };
 
             let final_query = if query_str == "!!" {
                 if let Some(last) = History::last()? {
-                    println!("ðŸ”„ Repitiendo Ãºltima bÃºsqueda: '{}'", last.query);
+                    println!("Repitiendo ultima busqueda: '{}'", last.query);
                     last.query
                 } else {
-                    println!("âš ï¸ No hay bÃºsquedas anteriores.");
+                    println!("[!] No hay busquedas anteriores.");
                     return Ok(());
                 }
             } else {
@@ -513,7 +516,7 @@ fn main() -> anyhow::Result<()> {
                 if ai {
                     println!(
                         "{} El flag --ai requiere compilar con: cargo build --release --features ai",
-                        "âš ï¸".yellow()
+                        "[!]".yellow()
                     );
                     return Ok(());
                 }
@@ -526,7 +529,7 @@ fn main() -> anyhow::Result<()> {
     Ok(())
 }
 
-// ===== FunciÃ³n para mostrar estadÃ­sticas =====
+// ===== Funcion para mostrar estadisticas =====
 
 fn show_stats() -> anyhow::Result<()> {
     use semcode_search::Cache;
@@ -561,7 +564,7 @@ fn show_stats() -> anyhow::Result<()> {
     }
 
     println!("\n{}", tr.stats_title.bold());
-    println!("{}", "â”€".repeat(50).dimmed());
+    println!("{}", "-".repeat(50).dimmed());
     println!(
         "  {}: {}",
         tr.files_indexed.cyan(),
@@ -586,7 +589,7 @@ fn show_stats() -> anyhow::Result<()> {
     for (ext, (count, size)) in sorted_exts {
         let pct = (*count as f32 / total_for_pct) * 100.0;
         println!(
-            "    â”œâ”€â”€ {}: {} archivos ({:.0}%) [{}]",
+            "    - {}: {} archivos ({:.0}%) [{}]",
             ext.green(),
             count.to_string().yellow(),
             pct,
@@ -599,18 +602,18 @@ fn show_stats() -> anyhow::Result<()> {
     if cache.has_embeddings {
         let with_emb = cache.count_with_embeddings();
         println!(
-            "  ðŸ§  Con embeddings: {}/{} archivos",
+            "  Con embeddings: {}/{} archivos",
             with_emb.to_string().green(),
             total_files.to_string().dimmed()
         );
     }
 
-    println!("{}", "â”€".repeat(50).dimmed());
+    println!("{}", "-".repeat(50).dimmed());
 
     Ok(())
 }
 
-// ===== FunciÃ³n para mostrar historial =====
+// ===== Funcion para mostrar historial =====
 
 fn show_history(limit: usize) -> anyhow::Result<()> {
     let tr = t();
@@ -622,7 +625,7 @@ fn show_history(limit: usize) -> anyhow::Result<()> {
     }
 
     println!("\n{}", tr.history_title.bold());
-    println!("{}", "â”€".repeat(50).dimmed());
+    println!("{}", "-".repeat(50).dimmed());
 
     for (i, entry) in history.iter().take(limit).enumerate() {
         println!(
@@ -633,9 +636,9 @@ fn show_history(limit: usize) -> anyhow::Result<()> {
         );
     }
 
-    println!("{}", "â”€".repeat(50).dimmed());
+    println!("{}", "-".repeat(50).dimmed());
     println!(
-        "  {}: {} bÃºsquedas",
+        "  {}: {} busquedas",
         tr.history_total.cyan(),
         history.len().to_string().green()
     );
