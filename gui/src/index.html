@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="dark light">
+  <title>Semcode Search</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div id="app" class="app">
+    <header class="topbar">
+      <div class="brand">
+        <img src="logo.png" alt="Semcode Logo" class="brand-logo" />
+        <div class="brand-copy">
+          <strong>Sem<span>code</span></strong>
+          <small>SEARCH</small>
+        </div>
+      </div>
+
+      <div class="topbar-actions">
+        <div id="aiStatus" class="status-chip" title="Estado del modelo AI">
+          <span class="status-dot"></span>
+          <span>AI checking...</span>
+        </div>
+        <button class="icon-btn" id="themeToggle" title="Cambiar tema" aria-label="Cambiar tema">&#9680;</button>
+        <button class="icon-btn" id="languageToggle" title="Cambiar idioma" aria-label="Cambiar idioma">ES</button>
+        <button class="window-btn" id="minimizeBtn" title="Minimizar">&#8722;</button>
+        <button class="window-btn" id="maximizeBtn" title="Maximizar">&#9633;</button>
+        <button class="window-btn close" id="closeBtn" title="Cerrar">&#215;</button>
+      </div>
+    </header>
+
+    <div class="workspace">
+      <aside class="sidebar">
+        <nav class="main-nav" aria-label="Navegación principal">
+          <button class="nav-item active" data-view="search"><span class="nav-icon">&#8981;</span><span data-i18n="search">Buscar</span><kbd>Ctrl K</kbd></button>
+          <button class="nav-item" data-action="index"><span class="nav-icon">&#65291;</span><span data-i18n="index">Indexar</span></button>
+          <button class="nav-item" data-action="stats"><span class="nav-icon">&#9635;</span><span data-i18n="stats">Stats</span></button>
+        </nav>
+
+        <section class="side-section">
+          <div class="section-heading">
+            <span data-i18n="projects">Proyectos</span>
+            <button id="addProjectBtn" class="tiny-btn" title="Añadir proyecto">+</button>
+          </div>
+          <div id="projectsList" class="side-list">
+            <div class="empty-side" data-i18n="loading">Cargando...</div>
+          </div>
+        </section>
+
+        <section class="side-section">
+          <div class="section-heading">
+            <span data-i18n="history">Historial</span>
+            <button id="clearHistoryBtn" class="tiny-btn" title="Limpiar historial">&#9003;</button>
+          </div>
+          <div id="historyList" class="side-list">
+            <div class="empty-side" data-i18n="loading">Cargando...</div>
+          </div>
+        </section>
+
+        <section class="side-section aliases-section">
+          <div class="section-heading">
+            <span data-i18n="aliases">Aliases</span>
+            <button id="newAliasBtn" class="tiny-btn" title="Nuevo alias">+</button>
+          </div>
+          <div id="aliasesList" class="side-list">
+            <div class="empty-side" data-i18n="loading">Cargando...</div>
+          </div>
+        </section>
+
+        <div class="sidebar-bottom">
+          <button class="nav-item" data-view="settings"><span class="nav-icon">&#9881;</span><span data-i18n="settings">Configuración</span></button>
+        </div>
+      </aside>
+
+      <main class="main-content">
+        <section id="searchView" class="view active-view">
+          <div class="hero">
+            <div class="eyebrow"><span class="pulse"></span> SEMANTIC CODE SEARCH</div>
+            <h1 data-i18n="heroTitle">Encuentra c&oacute;digo por significado.</h1>
+            <p data-i18n="heroSubtitle">Describe lo que buscas en lenguaje natural y Semcode encontrar&aacute; los fragmentos m&aacute;s relevantes.</p>
+
+            <div class="search-box-wrap">
+              <div class="search-box">
+                <span class="search-symbol">&#8981;</span>
+                <input id="searchInput" type="text" autocomplete="off" spellcheck="false"
+                  placeholder="&iquest;Qu&eacute; quieres encontrar en tu c&oacute;digo?" data-i18n-placeholder="searchPlaceholder">
+                <button id="clearSearchBtn" class="clear-btn" hidden>&#215;</button>
+                <button id="searchBtn" class="primary-btn">
+                  <span data-i18n="search">Buscar</span>
+                  <kbd>Enter</kbd>
+                </button>
+              </div>
+              <div class="search-tools">
+                <div class="mode-switch" role="group" aria-label="Modo de b&uacute;squeda">
+                  <button class="mode-btn active" data-mode="semantic">Semantic</button>
+                  <button class="mode-btn" data-mode="ai">AI Enhanced</button>
+                </div>
+                <button id="filterBtn" class="tool-btn"><span data-i18n="filters">Filtros</span> <span id="filterCount" class="badge" hidden>0</span></button>
+                <button id="pathBtn" class="tool-btn"><span data-i18n="path">Ruta</span>: <span id="pathLabel" data-i18n="all">Todo</span></button>
+              </div>
+            </div>
+
+            <div class="suggestions" id="suggestions">
+              <button data-query="&iquest;D&oacute;nde se valida la autenticaci&oacute;n y los tokens JWT?">validaci&oacute;n de JWT</button>
+              <button data-query="&iquest;C&oacute;mo se gestiona la conexi&oacute;n a la base de datos?">conexi&oacute;n a base de datos</button>
+              <button data-query="&iquest;D&oacute;nde se implementa el retry de operaciones fallidas?">retry / recuperaci&oacute;n</button>
+              <button data-query="&iquest;C&oacute;mo se manejan los errores de la aplicaci&oacute;n?">manejo de errores</button>
+            </div>
+          </div>
+
+          <section class="results-area">
+            <div class="results-header">
+              <div>
+                <h2 id="resultsTitle" data-i18n="results">Resultados</h2>
+                <span id="resultsMeta" class="muted" data-i18n="readyToSearch">Listo para buscar</span>
+              </div>
+              <div class="results-actions">
+                <button id="lastSearchBtn" class="ghost-btn" data-i18n="lastSearch">&Uacute;ltima b&uacute;squeda</button>
+                <select id="limitSelect" class="select">
+                  <option value="10">10</option>
+                  <option value="20" selected>20</option>
+                  <option value="50">50</option>
+                  <option value="100">100</option>
+                </select>
+              </div>
+            </div>
+            <div id="resultsList" class="results-list">
+              <div class="welcome-card">
+                <div class="welcome-icon">&#8981;</div>
+                <h3 data-i18n="welcomeTitle">Busca algo en tu codebase</h3>
+                <p data-i18n="welcomeSubtitle">Usa lenguaje natural para encontrar el c&oacute;digo que necesitas.</p>
+              </div>
+            </div>
+          </section>
+        </section>
+
+        <section id="settingsView" class="view">
+          <div class="page-header">
+            <div>
+              <div class="eyebrow">PREFERENCES</div>
+              <h1 data-i18n="settings">Configuraci&oacute;n</h1>
+              <p class="muted" data-i18n="settingsSubtitle">Ajusta el comportamiento de Semcode Search.</p>
+            </div>
+          </div>
+          <div id="settingsForm" class="settings-grid"></div>
+        </section>
+      </main>
+
+      <aside id="previewPanel" class="preview-panel">
+        <div class="preview-header">
+          <div class="preview-file">
+            <span class="file-type">RS</span>
+            <div>
+              <strong id="previewName">Preview</strong>
+              <small id="previewPath" data-i18n="selectResult">Selecciona un resultado</small>
+            </div>
+          </div>
+          <button id="closePreviewBtn" class="icon-btn" title="Cerrar preview">&#215;</button>
+        </div>
+        <div class="preview-toolbar">
+          <button id="copyCodeBtn" class="ghost-btn" data-i18n="copy">Copiar</button>
+          <button id="openEditorBtn" class="ghost-btn" data-i18n="editor">Editor</button>
+          <button id="openExplorerBtn" class="ghost-btn" data-i18n="explorer">Explorador</button>
+        </div>
+        <div id="codePreview" class="code-preview">
+          <div class="code-empty" data-i18n="selectToSeeCode">Selecciona un resultado para ver el c&oacute;digo.</div>
+        </div>
+      </aside>
+    </div>
+
+    <footer class="statusbar">
+      <div class="status-left">
+        <span id="indexStatus"><span class="status-dot"></span> <span data-i18n="indexed">Indexado</span></span>
+        <span id="fileCount">&mdash; <span data-i18n="files">archivos</span></span>
+        <span id="currentProject" data-i18n="noProject">Sin proyecto</span>
+      </div>
+      <div class="status-right">
+        <span id="versionLabel">Semcode v&mdash;</span>
+        <span id="systemLabel">&mdash;</span>
+        <button id="shortcutsBtn" class="status-btn" data-i18n="shortcuts">Atajos</button>
+      </div>
+    </footer>
+  </div>
+
+  <div id="filterModal" class="modal" hidden>
+    <div class="modal-backdrop"></div>
+    <div class="modal-card compact">
+      <div class="modal-header">
+        <div><span class="eyebrow">SEARCH</span><h2 data-i18n="advancedFilters">Filtros avanzados</h2></div>
+        <button class="icon-btn modal-close">&#215;</button>
+      </div>
+      <div class="form-grid">
+        <label><span data-i18n="extensions">Extensiones</span>
+          <input id="filterExtensions" type="text" placeholder="rs, toml, js">
+        </label>
+        <label><span data-i18n="exclude">Excluir</span>
+          <input id="filterExclude" type="text" placeholder="target, node_modules">
+        </label>
+        <label><span data-i18n="minScore">Min. relevancia</span>
+          <input id="filterScore" type="number" min="0" max="1" step="0.05" value="0">
+        </label>
+        <label><span data-i18n="caseSensitive">Case sensitive</span>
+          <select id="filterCase"><option value="false">No</option><option value="true">S&iacute;</option></select>
+        </label>
+      </div>
+      <div class="modal-actions">
+        <button id="resetFiltersBtn" class="ghost-btn" data-i18n="reset">Restablecer</button>
+        <button id="applyFiltersBtn" class="primary-btn" data-i18n="applyFilters">Aplicar filtros</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="statsModal" class="modal" hidden>
+    <div class="modal-backdrop"></div>
+    <div class="modal-card">
+      <div class="modal-header">
+        <div><span class="eyebrow">CODEBASE</span><h2 data-i18n="statistics">Estad&iacute;sticas</h2></div>
+        <button class="icon-btn modal-close">&#215;</button>
+      </div>
+      <div id="statsContent" class="stats-grid"></div>
+    </div>
+  </div>
+
+  <div id="shortcutsModal" class="modal" hidden>
+    <div class="modal-backdrop"></div>
+    <div class="modal-card compact">
+      <div class="modal-header">
+        <div><span class="eyebrow">KEYBOARD</span><h2 data-i18n="shortcuts">Atajos</h2></div>
+        <button class="icon-btn modal-close">&#215;</button>
+      </div>
+      <div class="shortcut-list">
+        <div><span data-i18n="scSearch">Buscar</span><kbd>Ctrl K</kbd></div>
+        <div><span data-i18n="scRunSearch">Ejecutar b&uacute;squeda</span><kbd>Enter</kbd></div>
+        <div><span data-i18n="scClose">Cerrar modal / preview</span><kbd>Esc</kbd></div>
+        <div><span data-i18n="scNavigate">Navegar resultados</span><kbd>&uarr; &darr;</kbd></div>
+        <div><span data-i18n="scOpen">Abrir resultado</span><kbd>Enter</kbd></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="toastContainer" class="toast-container" aria-live="polite"></div>
+
+  <script src="main.js"></script>
+</body>
+</html>

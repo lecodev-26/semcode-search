@@ -12,6 +12,8 @@ pub struct CacheEntry {
     pub modified: u64,
     pub words: Vec<String>,
     pub size: u64,
+    /// 👇 NUEVO: Embedding del archivo (opcional)
+    pub embedding: Option<Vec<f32>>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -19,6 +21,8 @@ pub struct Cache {
     pub entries: HashMap<PathBuf, CacheEntry>,
     pub created: String,
     pub updated: String,
+    /// 👇 NUEVO: Indica si esta caché tiene embeddings
+    pub has_embeddings: bool,
 }
 
 impl Cache {
@@ -27,6 +31,7 @@ impl Cache {
             entries: HashMap::new(),
             created: chrono::Local::now().to_string(),
             updated: chrono::Local::now().to_string(),
+            has_embeddings: false,
         }
     }
 
@@ -49,6 +54,14 @@ impl Cache {
             return diff.num_minutes() < 60;
         }
         false
+    }
+
+    /// Devuelve el número de entradas con embeddings
+    pub fn count_with_embeddings(&self) -> usize {
+        self.entries
+            .values()
+            .filter(|e| e.embedding.is_some())
+            .count()
     }
 }
 

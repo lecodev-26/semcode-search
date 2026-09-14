@@ -1,17 +1,19 @@
-//! # semcode-search - Punto de entrada de la aplicación
+//! # semcode-search - Punto de entrada de la aplicaciÃ³n
 
 use clap::Parser;
 use colored::*;
 use semcode_search::cli::{AliasAction, Cli, Commands, HistoryAction};
-use semcode_search::core::{index_files, search_files, SearchConfigInternal};
+use semcode_search::core::{search_files, SearchConfigInternal};
 use semcode_search::history::History;
+use semcode_search::i18n::t;
 use semcode_search::watch::Watcher;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs;
+use std::io::{self, Write};
 use std::path::PathBuf;
 
-// ===== Configuración =====
+// ===== ConfiguraciÃ³n =====
 
 #[derive(Debug, Serialize, Deserialize, Default)]
 pub struct Config {
@@ -116,18 +118,60 @@ fn apply_config_to_search(
     )
 }
 
+/// Muestra un mensaje de bienvenida cuando no se pasan argumentos
+fn show_welcome() {
+    let tr = t();
+
+    println!();
+    println!("{}", "â•".repeat(60).cyan());
+    println!("  {}", tr.welcome_title.bold().cyan());
+    println!("  {}", format!("v{}", env!("CARGO_PKG_VERSION")).green());
+    println!("{}", "â•".repeat(60).cyan());
+    println!();
+    println!("  {}", tr.welcome_message);
+    println!();
+    println!("{}", "â”€".repeat(60).dimmed());
+    println!();
+    println!("  {}:", tr.more_info.green());
+    println!("    {}  semcode-search --help", "â†’".dimmed());
+    println!();
+    println!("  {}:", tr.languages.green());
+    println!("    {}  semcode-search index --path .", "â†’".dimmed());
+    println!(
+        "    {}  semcode-search search --query \"fn\" --path .",
+        "â†’".dimmed()
+    );
+    println!("    {}  semcode-search stats", "â†’".dimmed());
+    println!("    {}  semcode-search watch --path .", "â†’".dimmed());
+    println!();
+    println!("{}", "â”€".repeat(60).dimmed());
+    println!();
+    println!("  ðŸ”— https://github.com/lecodev-26/semcode-search");
+    println!();
+    println!("{}", "â•".repeat(60).cyan());
+    println!();
+    print!("  {} ", tr.press_enter.yellow());
+    io::stdout().flush().unwrap();
+    let mut input = String::new();
+    let _ = io::stdin().read_line(&mut input);
+}
+
 fn main() -> anyhow::Result<()> {
+    let args: Vec<String> = std::env::args().collect();
+    if args.len() <= 1 {
+        show_welcome();
+        return Ok(());
+    }
+
     let cli = Cli::parse();
     let config = load_config().unwrap_or_default();
+    let tr = t();
 
     match cli.command {
         Commands::Init { force } => {
             let config_path = get_config_path();
             if config_path.exists() && !force {
-                println!(
-                    "{} Configuración ya existe. Usa --force para sobreescribir.",
-                    "⚠️".yellow()
-                );
+                println!("{}", tr.error_config_exists.yellow());
                 return Ok(());
             }
             let default_config = Config {
@@ -144,36 +188,23 @@ fn main() -> anyhow::Result<()> {
                 aliases: HashMap::new(),
             };
             save_config(&default_config)?;
-            println!(
-                "{} Configuración creada en: {}",
-                "✅".green(),
-                config_path.display()
-            );
-            println!(
-                "{} Puedes editarla manualmente o usar 'alias' para gestionar búsquedas.",
-                "💡".cyan()
-            );
+            println!("{} {}", tr.config_created.green(), config_path.display());
+            println!("{}", tr.config_hint.cyan());
         }
 
         Commands::Alias(action) => {
             let mut config = load_config()?;
             match action {
-                AliasAction::Save {
-                    name,
-                    query,
-                    params,
-                } => {
-                    config
-                        .aliases
-                        .insert(name.clone(), AliasEntry { query, params });
+                AliasAction::Save { name, query, params } => {
+                    config.aliases.insert(name.clone(), AliasEntry { query, params });
                     save_config(&config)?;
-                    println!("{} Alias '{}' guardado.", "✅".green(), name);
+                    println!("{}: {}", tr.alias_saved.green(), name);
                 }
                 AliasAction::List => {
                     if config.aliases.is_empty() {
-                        println!("{} No hay alias guardados.", "📭".yellow());
+                        println!("{}", tr.alias_empty.yellow());
                     } else {
-                        println!("{} Alias guardados:", "📋".blue());
+                        println!("{}:", tr.alias_list.blue());
                         for (name, entry) in &config.aliases {
                             println!(
                                 "  {}: {} {}",
@@ -187,23 +218,23 @@ fn main() -> anyhow::Result<()> {
                 AliasAction::Remove { name } => {
                     if config.aliases.remove(&name).is_some() {
                         save_config(&config)?;
-                        println!("{} Alias '{}' eliminado.", "🗑️".green(), name);
+                        println!("{}: {}", tr.alias_removed.green(), name);
                     } else {
-                        println!("{} Alias '{}' no encontrado.", "⚠️".yellow(), name);
+                        println!("{}: {}", tr.alias_not_found.yellow(), name);
                     }
                 }
                 AliasAction::Run { name } => {
                     if let Some(entry) = config.aliases.get(&name) {
                         let params_str = entry.params.join(" ");
-                        println!("{} Ejecutando alias '{}':", "🚀".cyan(), name);
+                        println!("{}: {}", tr.alias_running.cyan(), name);
                         println!("  query: {}", entry.query);
                         println!("  params: {}", params_str);
                         println!(
-                            "💡 Para ejecutar manualmente: semcode-search search --query \"{}\" {}",
+                            "ðŸ’¡ Para ejecutar manualmente: semcode-search search --query \"{}\" {}",
                             entry.query, params_str
                         );
                     } else {
-                        println!("{} Alias '{}' no encontrado.", "⚠️".yellow(), name);
+                        println!("{}: {}", tr.alias_not_found.yellow(), name);
                     }
                 }
             }
@@ -219,19 +250,19 @@ fn main() -> anyhow::Result<()> {
             }
             HistoryAction::Clear => {
                 History::clear()?;
-                println!("{} Historial limpiado.", "🗑️".green());
+                println!("{}", tr.history_cleared.green());
             }
             HistoryAction::Last => {
                 if let Some(entry) = History::last()? {
-                    println!("{} Última búsqueda:", "🕐".cyan());
+                    println!("{}:", tr.last_search.cyan());
                     println!("  Query: {}", entry.query.green());
                     println!("  Fecha: {}", entry.timestamp.dimmed());
                     println!(
-                        "\n💡 Para repetir: semcode-search search --query \"{}\"",
+                        "\nðŸ’¡ Para repetir: semcode-search search --query \"{}\"",
                         entry.query
                     );
                 } else {
-                    println!("{} No hay búsquedas en el historial.", "📭".yellow());
+                    println!("{}", tr.history_empty.yellow());
                 }
             }
         },
@@ -242,10 +273,37 @@ fn main() -> anyhow::Result<()> {
             force,
             ext,
             ignore_pattern,
+            ai,
         } => {
             let ignore_dirs: Vec<&str> = ignore.split(',').collect();
             let ext_filter = ext.as_ref().map(|e| e.split(',').collect());
-            index_files(
+
+            #[cfg(feature = "ai")]
+            {
+                if ai {
+                    semcode_search::core::index_files_with_ai(
+                        &path,
+                        ignore_dirs,
+                        ext_filter,
+                        ignore_pattern.as_deref(),
+                        force,
+                    )?;
+                    return Ok(());
+                }
+            }
+
+            #[cfg(not(feature = "ai"))]
+            {
+                if ai {
+                    println!(
+                        "{} El flag --ai requiere compilar con: cargo build --release --features ai",
+                        "âš ï¸".yellow()
+                    );
+                    return Ok(());
+                }
+            }
+
+            semcode_search::core::index_files(
                 &path,
                 ignore_dirs,
                 ext_filter,
@@ -264,6 +322,37 @@ fn main() -> anyhow::Result<()> {
             watcher.run()?;
         }
 
+        Commands::Serve { port, host } => {
+            #[cfg(feature = "server")]
+            {
+                let rt = tokio::runtime::Runtime::new()?;
+                rt.block_on(async { semcode_search::run_server(&host, port).await })?;
+            }
+            #[cfg(not(feature = "server"))]
+            {
+                let _ = (port, host);
+                println!(
+                    "{} El comando 'serve' requiere compilar con: cargo build --release --features server",
+                    "âš ï¸".yellow()
+                );
+            }
+        }
+
+        Commands::Tui { path } => {
+            #[cfg(feature = "tui")]
+            {
+                semcode_search::run_tui(&path)?;
+            }
+            #[cfg(not(feature = "tui"))]
+            {
+                let _ = path;
+                println!(
+                    "{} El comando 'tui' requiere compilar con: cargo build --release --features tui",
+                    "âš ï¸".yellow()
+                );
+            }
+        }
+
         Commands::Search {
             query,
             path,
@@ -275,6 +364,7 @@ fn main() -> anyhow::Result<()> {
             no_cache,
             update: _,
             semantic,
+            ai,
             file,
             summary,
             max_size,
@@ -350,7 +440,7 @@ fn main() -> anyhow::Result<()> {
                         );
                         (Some(q), ext_vec, ignore_vec, v, i, max, pat)
                     } else {
-                        println!("{} Alias '{}' no encontrado.", "⚠️".yellow(), alias_name);
+                        println!("{}: {}", tr.alias_not_found.yellow(), alias_name);
                         return Ok(());
                     }
                 } else if let Some(q) = query {
@@ -365,39 +455,30 @@ fn main() -> anyhow::Result<()> {
                     );
                     (Some(q), ext_vec, ignore_vec, v, i, max, pat)
                 } else {
-                    println!(
-                        "{} Debes proporcionar una query con --query o un alias con --alias",
-                        "⚠️".yellow()
-                    );
+                    println!("{}", tr.error_no_query.yellow());
                     return Ok(());
                 };
 
             let query_str = match query {
                 Some(q) => q,
                 None => {
-                    println!("{} Error: no se pudo obtener la query.", "⚠️".yellow());
+                    println!("âš ï¸ Error: no se pudo obtener la query.");
                     return Ok(());
                 }
             };
 
-            // Si la query es "!!", repetir la última búsqueda
             let final_query = if query_str == "!!" {
                 if let Some(last) = History::last()? {
-                    println!(
-                        "{} Repitiendo última búsqueda: '{}'",
-                        "🔄".cyan(),
-                        last.query
-                    );
+                    println!("ðŸ”„ Repitiendo Ãºltima bÃºsqueda: '{}'", last.query);
                     last.query
                 } else {
-                    println!("{} No hay búsquedas anteriores.", "⚠️".yellow());
+                    println!("âš ï¸ No hay bÃºsquedas anteriores.");
                     return Ok(());
                 }
             } else {
                 query_str
             };
 
-            // Guardar en el historial
             let _ = History::add(&final_query);
 
             let search_config = SearchConfigInternal {
@@ -410,6 +491,7 @@ fn main() -> anyhow::Result<()> {
                 verbose,
                 no_cache,
                 semantic,
+                ai,
                 file,
                 summary,
                 max_size,
@@ -418,6 +500,25 @@ fn main() -> anyhow::Result<()> {
                 interactive,
             };
 
+            #[cfg(feature = "ai")]
+            {
+                if ai {
+                    semcode_search::core::search_files_with_ai(search_config)?;
+                    return Ok(());
+                }
+            }
+
+            #[cfg(not(feature = "ai"))]
+            {
+                if ai {
+                    println!(
+                        "{} El flag --ai requiere compilar con: cargo build --release --features ai",
+                        "âš ï¸".yellow()
+                    );
+                    return Ok(());
+                }
+            }
+
             search_files(search_config)?;
         }
     }
@@ -425,19 +526,17 @@ fn main() -> anyhow::Result<()> {
     Ok(())
 }
 
-// ===== Función para mostrar estadísticas (v2.0.0) =====
+// ===== FunciÃ³n para mostrar estadÃ­sticas =====
 
 fn show_stats() -> anyhow::Result<()> {
     use semcode_search::Cache;
     use std::path::Path;
 
+    let tr = t();
     let cache_path = Path::new(".semantic-index.json");
 
     if !cache_path.exists() {
-        println!(
-            "{} No hay caché. Ejecuta 'semcode-search index --path .' primero.",
-            "⚠️".yellow()
-        );
+        println!("{}", tr.error_cache_not_found.yellow());
         return Ok(());
     }
 
@@ -461,28 +560,24 @@ fn show_stats() -> anyhow::Result<()> {
         }
     }
 
+    println!("\n{}", tr.stats_title.bold());
+    println!("{}", "â”€".repeat(50).dimmed());
     println!(
-        "\n{} {}",
-        "📊".blue(),
-        "Estadísticas de semcode-search".bold()
-    );
-    println!("{}", "─".repeat(50).dimmed());
-    println!(
-        "  {} Archivos indexados: {}",
-        "📁".cyan(),
+        "  {}: {}",
+        tr.files_indexed.cyan(),
         total_files.to_string().green()
     );
     println!(
-        "  {} Total de líneas: {}",
-        "📝".cyan(),
+        "  {}: {}",
+        tr.total_lines.cyan(),
         total_lines.to_string().green()
     );
     println!(
-        "  {} Tamaño total: {}",
-        "💾".cyan(),
+        "  {}: {}",
+        tr.total_size.cyan(),
         format_size_bytes(total_size).green()
     );
-    println!("\n  {} Lenguajes:", "🔤".cyan());
+    println!("\n  {}:", tr.languages.cyan());
 
     let mut sorted_exts: Vec<_> = extensions.iter().collect();
     sorted_exts.sort_by_key(|a| std::cmp::Reverse(a.1 .0));
@@ -491,7 +586,7 @@ fn show_stats() -> anyhow::Result<()> {
     for (ext, (count, size)) in sorted_exts {
         let pct = (*count as f32 / total_for_pct) * 100.0;
         println!(
-            "    ├── {}: {} archivos ({:.0}%) [{}]",
+            "    â”œâ”€â”€ {}: {} archivos ({:.0}%) [{}]",
             ext.green(),
             count.to_string().yellow(),
             pct,
@@ -499,28 +594,35 @@ fn show_stats() -> anyhow::Result<()> {
         );
     }
 
-    println!(
-        "\n  {} Última indexación: {}",
-        "🕐".cyan(),
-        cache.updated.dimmed()
-    );
-    println!("{}", "─".repeat(50).dimmed());
+    println!("\n  {}: {}", tr.last_indexed.cyan(), cache.updated.dimmed());
+
+    if cache.has_embeddings {
+        let with_emb = cache.count_with_embeddings();
+        println!(
+            "  ðŸ§  Con embeddings: {}/{} archivos",
+            with_emb.to_string().green(),
+            total_files.to_string().dimmed()
+        );
+    }
+
+    println!("{}", "â”€".repeat(50).dimmed());
 
     Ok(())
 }
 
-// ===== Función para mostrar historial (v2.0.0) =====
+// ===== FunciÃ³n para mostrar historial =====
 
 fn show_history(limit: usize) -> anyhow::Result<()> {
+    let tr = t();
     let history = History::list()?;
 
     if history.is_empty() {
-        println!("{} No hay búsquedas en el historial.", "📭".yellow());
+        println!("{}", tr.history_empty.yellow());
         return Ok(());
     }
 
-    println!("\n{} {}", "🕐".blue(), "Historial de búsquedas".bold());
-    println!("{}", "─".repeat(50).dimmed());
+    println!("\n{}", tr.history_title.bold());
+    println!("{}", "â”€".repeat(50).dimmed());
 
     for (i, entry) in history.iter().take(limit).enumerate() {
         println!(
@@ -531,10 +633,10 @@ fn show_history(limit: usize) -> anyhow::Result<()> {
         );
     }
 
-    println!("{}", "─".repeat(50).dimmed());
+    println!("{}", "â”€".repeat(50).dimmed());
     println!(
-        "  {} Total: {} búsquedas",
-        "📊".cyan(),
+        "  {}: {} bÃºsquedas",
+        tr.history_total.cyan(),
         history.len().to_string().green()
     );
 

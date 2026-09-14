@@ -1,0 +1,47 @@
+{
+  "name": "semcode-search-vscode",
+  "displayName": "Semcode Search",
+  "description": "Fast semantic code search from VSCode using semcode-search",
+  "version": "0.1.0",
+  "publisher": "lecodev-26",
+  "engines": {
+    "vscode": "^1.80.0"
+  },
+  "categories": ["Other"],
+  "activationEvents": [],
+  "main": "./extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "semcode.search",
+        "title": "Semcode: Search"
+      },
+      {
+        "command": "semcode.searchAI",
+        "title": "Semcode: Search with AI"
+      },
+      {
+        "command": "semcode.index",
+        "title": "Semcode: Index Project"
+      },
+      {
+        "command": "semcode.stats",
+        "title": "Semcode: Show Stats"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "semcode.search",
+        "key": "ctrl+shift+f",
+        "mac": "cmd+shift+f"
+      }
+    ]
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "pretest": "npm run lint"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.80.0"
+  }
+}

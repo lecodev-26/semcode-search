@@ -31,7 +31,7 @@ impl SearchEngine {
         Ok(())
     }
 
-    /// Buscar por texto o semánticamente
+    /// Buscar por texto
     pub fn search(&self, query: &str) -> Result<Vec<SearchResult>> {
         let config = SearchConfigInternal {
             query: query.to_string(),
@@ -43,6 +43,7 @@ impl SearchEngine {
             verbose: self.config.verbose,
             no_cache: self.config.no_cache,
             semantic: false,
+            ai: false, // 👈 NUEVO
             file: None,
             summary: self.config.summary,
             max_size: self.config.max_size.clone(),
@@ -51,7 +52,8 @@ impl SearchEngine {
             interactive: self.config.interactive,
         };
 
-        let results = core_search_files(config).map_err(|e| SearchError::Other(e.to_string()))?;
+        let results =
+            core_search_files(config).map_err(|e| SearchError::Other(e.to_string()))?;
         Ok(results)
     }
 
@@ -67,6 +69,7 @@ impl SearchEngine {
             verbose: self.config.verbose,
             no_cache: self.config.no_cache,
             semantic: true,
+            ai: false, // 👈 NUEVO
             file: None,
             summary: self.config.summary,
             max_size: self.config.max_size.clone(),
@@ -75,7 +78,8 @@ impl SearchEngine {
             interactive: self.config.interactive,
         };
 
-        let results = core_search_files(config).map_err(|e| SearchError::Other(e.to_string()))?;
+        let results =
+            core_search_files(config).map_err(|e| SearchError::Other(e.to_string()))?;
         Ok(results)
     }
 
@@ -91,6 +95,7 @@ impl SearchEngine {
             verbose: self.config.verbose,
             no_cache: self.config.no_cache,
             semantic: false,
+            ai: false, // 👈 NUEVO
             file: Some(pattern.to_string()),
             summary: self.config.summary,
             max_size: self.config.max_size.clone(),
@@ -99,7 +104,8 @@ impl SearchEngine {
             interactive: self.config.interactive,
         };
 
-        let results = core_search_files(config).map_err(|e| SearchError::Other(e.to_string()))?;
+        let results =
+            core_search_files(config).map_err(|e| SearchError::Other(e.to_string()))?;
         Ok(results)
     }
 

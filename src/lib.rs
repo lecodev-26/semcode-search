@@ -1,14 +1,22 @@
 //! # semcode-search
 //!
-//! Biblioteca para búsqueda semántica de código con TF-IDF, caché y filtros avanzados.
+//! Biblioteca para bÃºsqueda semÃ¡ntica de cÃ³digo con TF-IDF, cachÃ© y filtros avanzados.
 
 pub mod cache;
 pub mod cli;
 pub mod core;
+pub mod embeddings;
 pub mod history;
+pub mod i18n;
 pub mod watch;
 
-// Re-exportar API pública
+#[cfg(feature = "server")]
+pub mod server;
+
+#[cfg(feature = "tui")]
+pub mod tui;
+
+// Re-exportar API pÃºblica
 pub use cache::Cache;
 pub use core::index_files;
 pub use core::search_files;
@@ -17,4 +25,21 @@ pub use core::SearchEngine;
 pub use core::SearchError;
 pub use core::SearchResult;
 pub use history::History;
+pub use i18n::{current_language, t, Language, Translations};
 pub use watch::Watcher;
+
+// Funciones con IA (solo si el feature `ai` estÃ¡ activado)
+#[cfg(feature = "ai")]
+pub use core::index_files_with_ai;
+#[cfg(feature = "ai")]
+pub use core::search_files_with_ai;
+#[cfg(feature = "ai")]
+pub use embeddings::Embedder;
+
+// Servidor (solo si el feature `server` estÃ¡ activado)
+#[cfg(feature = "server")]
+pub use server::run_server;
+
+// TUI (solo si el feature `tui` estÃ¡ activado)
+#[cfg(feature = "tui")]
+pub use tui::run_tui;

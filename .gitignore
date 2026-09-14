@@ -1,28 +1,32 @@
 # Rust
 /target/
 **/*.rs.bk
-*.pdb
-*.exp
-*.lib
-*.ilk
-*.obj
 
-# Proyecto
-.semantic-index.json
-models/*.onnx
-models/*.bin
-models/*.safetensors
+# Tauri
+/src-tauri/target/
+/src-tauri/gen/
+/src-tauri/target/
+
+# Node
+node_modules/
 *.log
-
-# IDE
-.vscode/
-.idea/
-*.swp
-*.swo
+package-lock.json
 
 # OS
 .DS_Store
 Thumbs.db
 
-# Cargo
-Cargo.lock
+# Modelo de IA (se descarga automáticamente)
+.fastembed_cache/
+fastembed_cache/
+
+# Caché del indexado
+.semantic-index.json
+**/.semantic-index.json
+
+# GUI
+gui/src-tauri/target/
+gui/src-tauri/gen/
+
+# Logos generados (los originales, si quieres)
+# logo.png
