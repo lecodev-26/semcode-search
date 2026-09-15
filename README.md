@@ -28,7 +28,7 @@ semcode-search --help
 ## 🖥️ GUI de escritorio (v3.0.0)
 Aplicación nativa para Windows con interfaz gráfica moderna.
 
-Descarga: Releases v3.0.0
+Descarga: [Releases v3.0.0](https://github.com/lecodev-26/semcode-search/releases/tag/v3.0.0).
 
 📦 semcode-search-gui_3.0.0_x64_en-US.msi (4.7 MB) — Instalador oficial
 
