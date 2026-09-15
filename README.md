@@ -393,13 +393,20 @@ Y usa:
 MIT — ver LICENSE para más detalles.
 
 ## 👤 Author
-Manuel (@lecodev-26)
 
-## 🐙 GitHub: @lecodev-26
+**Manuel** ([@lecodev-26](https://github.com/lecodev-26))
 
-## 📦 Crates.io: semcode-search
+- 🐙 **GitHub:** [@lecodev-26](https://github.com/lecodev-26)
+- 📦 **Crates.io:** [semcode-search](https://crates.io/crates/semcode-search)
+
+---
 
 ## ⭐ Support
+
 Si este proyecto te ha sido útil, dale una ⭐ en GitHub. ¡Ayuda mucho!
 
-https://img.shields.io/github/stars/lecodev-26/semcode-search?style=social
+[![GitHub stars](https://img.shields.io/github/stars/lecodev-26/semcode-search?style=social)](https://github.com/lecodev-26/semcode-search/stargazers)
+
+---
+
+[⬆ Back to top](#-semcode-search)
