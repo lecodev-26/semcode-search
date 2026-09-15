@@ -1,13 +1,13 @@
-
 # 🔍 semcode-search
 
 [![Rust](https://img.shields.io/badge/rust-1.75%2B-blue.svg)](https://www.rust-lang.org)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Version](https://img.shields.io/badge/version-2.0.0-brightgreen.svg)](https://github.com/lecodev-26/semcode-search/releases)
+[![Version](https://img.shields.io/badge/version-3.0.0-brightgreen.svg)](https://github.com/lecodev-26/semcode-search/releases)
 [![Crates.io](https://img.shields.io/badge/crates.io-semcode--search-orange.svg)](https://crates.io/crates/semcode-search)
 [![Termux](https://img.shields.io/badge/Termux-compatible-brightgreen.svg)](https://termux.com)
+[![GUI](https://img.shields.io/badge/GUI-Windows-blue.svg)](https://github.com/lecodev-26/semcode-search/releases)
 
-> **Fast semantic code search CLI with TF-IDF ranking, caching, and advanced filtering.**
+> **Fast semantic code search CLI + Desktop GUI with AI embeddings, caching, and advanced filtering.**
 
 ---
 
@@ -15,139 +15,157 @@
 
 El crate está publicado oficialmente en [crates.io](https://crates.io/crates/semcode-search).
 
-# Instalación directa desde crates.io
 ```bash
 cargo install semcode-search
 ```
 Una vez instalado:
-
 ```bash
 semcode-search --version
+```
+```bash
 semcode-search --help
 ```
+## 🖥️ GUI de escritorio (v3.0.0)
+Aplicación nativa para Windows con interfaz gráfica moderna.
+
+Descarga: Releases v3.0.0 (https://github.com/lecodev-26/semcode-search/releases/tag/v3.0.0)
+
+📦 semcode-search-gui_3.0.0_x64_en-US.msi (4.7 MB) — Instalador oficial
+
+📦 semcode-search-gui_3.0.0_x64-setup.exe (3.17 MB) — Instalador NSIS (más rápido)
+
+Características:
+
+🎨 Interfaz moderna con tema oscuro/claro
+
+🌍 Cambio de idioma (Español / English)
+
+🔍 Búsqueda con preview de código
+
+📊 Estadísticas visuales
+
+📜 Historial de búsquedas
+
+🏷️ Sistema de alias
+
+⚙️ Configuración global
+
 ## ✨ Features
 
-🔍 Text search with color highlighting
+### 🆕 Novedades v3.0.0
+- 🖥️ **GUI de escritorio** con Tauri (Windows)
+- 🧠 **IA real con embeddings** (fastembed, all-MiniLM-L6-v2)
+- 🌐 **Servidor HTTP con API REST** (axum)
+- 🎨 **Interfaz TUI** (ratatui)
+- 🌍 **Sistema i18n** (Español / English)
+- 🔌 **Plugins para editores** (VSCode + Neovim)
+- 📁 **`.gitignore` mejorado** (soporta `.git_exclude`, `.parents`)
 
-🧠 Semantic search using TF-IDF ranking
+### 📦 CLI
+- 🔍 **Búsqueda por texto** con resaltado en color
+- 🧠 **Búsqueda semántica** con TF-IDF
+- 💾 **Caché inteligente** para búsquedas instantáneas
+- 📁 **Filtros avanzados** por extensión, tamaño y patrones glob
+- 📄 **Búsqueda por nombre** de archivo
+- ⚙️ **Configuración global**
+- 🏷️ **Alias de búsquedas** (save, list, remove, run)
+- 🎮 **Modo interactivo** para navegar resultados
+- ⚡ **Indexado paralelo** con rayon
+- 📊 **Estadísticas** del proyecto
+- 🕐 **Historial de búsquedas** (últimas 100)
+- ⚡ **Búsqueda multi-hilo** (todos los núcleos)
+- 👁️ **Watch mode** (reindexado automático)
+- 📱 **Compatible con Termux** (Android)
+- 📚 **API pública** para usar como librería
 
-💾 Intelligent cache for instant searches
-
-📁 Advanced filtering by extension, size, and glob patterns
-
-📄 Filename search
-
-⚙️ Global configuration
-
-🏷️ Search aliases (save, list, remove, run)
-
-🎮 Interactive mode to navigate results
-
-⚡ Parallel indexing with rayon
-
-📊 Stats - Project statistics (v2.0.0)
-
-🕐 Search history - Last 100 searches (v2.0.0)
-
-⚡ Multi-threaded search - Use all CPU cores (v2.0.0)
-
-👁️ Watch mode - Auto-reindex on changes (v2.0.0)
-
-🌍 Multi-platform - Binaries for Linux, macOS, Windows (v2.0.0)
-
-📱 Termux compatible (Android)
-
-📚 Public API for use as a library
+---
 
 ## 🚀 Installation
 
-# From crates.io
+### Desde crates.io (CLI)
+
 ```bash
 cargo install semcode-search
 ```
-
-# From GitHub
+## Desde GitHub
 ```bash
 git clone https://github.com/lecodev-26/semcode-search
-```
-```bash
 cd semcode-search
-```
-```bash
 cargo build --release
 ```
+Una vez compilado:
 
+```bash
 # Windows
 .\target\release\semcode-search.exe --version
-
+```
+```bash
 # Linux/macOS
 ./target/release/semcode-search --version
-
-## 📖 Usage
-Búsqueda básica
-
-# Indexar un proyecto
-```bash
-semcode-search index --path .
 ```
+## Con todas las features (IA + servidor + TUI)
+```bash
+cargo build --release --features "ai server tui"
+```
+GUI de escritorio
+Descarga el instalador desde Releases v3.0.0.
+
+## 📖 Usage (CLI)
+
+### Búsqueda básica
+
+```bash
+# Indexar un proyecto
+semcode-search index --path .
 
 # Buscar por texto
-```bash
 semcode-search search --query "fn main" --path .
-```
 
 # Búsqueda semántica (TF-IDF)
-```bash
 semcode-search search --query "authentication middleware" --path . --semantic
-```
 
 # Buscar por nombre de archivo
-```bash
 semcode-search search --file "main.rs" --path .
-```
 
-# Búsqueda con verbosa
-```bash
+# Búsqueda con verbose
 semcode-search search --query "error" --path . --verbose
+```
+## IA real con embeddings (v3.0.0)
+```bash
+# Indexar con IA (genera embeddings, descarga modelo ~90MB)
+semcode-search index --path . --ai
+
+# Buscar por significado (IA real)
+semcode-search search --query "funcion que valida emails" --path . --ai
 ```
 ## Estadísticas (v2.0.0)
 ```bash
 semcode-search stats
 ```
-## Historial de búsquedas (v2.0.0)
 
+Historial de búsquedas (v2.0.0)
+```bash
 # Ver últimas 20 búsquedas
-```
 semcode-search history list
-```
 
 # Ver últimas 50 búsquedas
-```bash
 semcode-search history list --limit 50
-```
 
 # Repetir la última búsqueda
-```bash
 semcode-search search --query "!!" --path .
-```
 
 # Limpiar historial
-```bash
 semcode-search history clear
 ```
-Watch mode (v2.0.0)
-
-# Observar cambios y reindexar automáticamente
+## Watch mode (v2.0.0)
 ```bash
+# Observar cambios y reindexar automáticamente
 semcode-search watch --path .
-```
 
 # Con intervalo personalizado (en segundos)
-```bash
 semcode-search watch --path . --interval 5
-```
-## Alias
-```bash
+Alias
+bash
 semcode-search alias save find-main "main" -- --ext rs --path .
 semcode-search alias list
 semcode-search alias run find-main
@@ -157,88 +175,231 @@ semcode-search alias remove find-main
 ```bash
 semcode-search init
 ```
+## Servidor HTTP con API REST (v3.0.0)
+```bash
+# Arrancar servidor en http://127.0.0.1:8080
+semcode-search serve
+```
+
+# Puerto personalizado
+semcode-search serve --port 9000
+Endpoints disponibles:
+
+GET / — Información del servidor
+
+GET /health — Estado del servidor
+
+GET /stats — Estadísticas del proyecto
+
+GET /search?q=query — Búsqueda por texto
+
+## Interfaz TUI (v3.0.0)
+```bash
+# Abrir interfaz gráfica en terminal
+semcode-search tui --path .
+```
+## 🖥️ Usage (GUI)
+
+La GUI de escritorio ofrece una experiencia visual completa.
+
+### Inicio rápido
+
+1. **Descarga** el instalador `.msi` o `.exe` desde [Releases v3.0.0](https://github.com/lecodev-26/semcode-search/releases/tag/v3.0.0).
+2. **Ejecuta** el instalador.
+3. **Abre** Semcode Search desde el menú de inicio.
+4. **Pulsa "Indexar"** y selecciona la carpeta de tu proyecto.
+5. **Escribe una búsqueda** en lenguaje natural.
+6. **Haz clic** en cualquier resultado para ver el código completo.
+
+### Funcionalidades
+
+| Función | Descripción |
+|---------|-------------|
+| 🔍 **Búsqueda** | Texto normal o con IA (embeddings) |
+| 📊 **Stats** | Estadísticas visuales del proyecto |
+| 📜 **Historial** | Últimas 100 búsquedas con click para repetir |
+| 🏷️ **Alias** | Búsquedas guardadas con nombre |
+| 📁 **Proyectos** | Lista de proyectos recientes |
+| ⚙️ **Configuración** | Ajusta idioma, tema y preferencias |
+| 🌍 **i18n** | Cambia entre Español e English |
+| 🎨 **Tema** | Modo claro / oscuro |
+
+### Atajos de teclado
+
+| Atajo | Acción |
+|-------|--------|
+| `Ctrl + K` | Enfocar búsqueda |
+| `Enter` | Ejecutar búsqueda |
+| `↑ / ↓` | Navegar resultados |
+| `Esc` | Cerrar modal / preview |
+
+---
+
 ## 🏗️ Architecture
+
+### Vista general
+
 ```text
-┌─────────────────────────────────────────────────────┐
-│                    CLI (clap)                       │
-├─────────────────────────────────────────────────────┤
-│  Commands: init, alias, index, search, stats,       │
-│            history, watch                           │
-└─────────────────────┬───────────────────────────────┘
-                      │
-┌─────────────────────▼───────────────────────────────┐
-│                 Core Library                        │
-├─────────────────────────────────────────────────────┤
-│  • SearchEngine (public API)                       │
-│  • TF-IDF ranking                                  │
-│  • Parallel indexing & search (rayon)              │
-│  • Cache management                                │
-│  • History management                              │
-│  • Watch mode                                      │
-└─────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────┐
+│                    Interfaces                            │
+├──────────────┬────────────────┬──────────────────────────┤
+│   CLI        │      TUI       │        GUI               │
+│  (clap)      │   (ratatui)    │      (Tauri)             │
+└──────┬───────┴────────┬───────┴────────────┬─────────────┘
+       │                │                    │
+       └────────────────┼────────────────────┘
+                        │
+┌───────────────────────▼──────────────────────────────────┐
+│                    Core Library                          │
+├──────────────────────────────────────────────────────────┤
+│  • SearchEngine (public API)                             │
+│  • Indexado paralelo con rayon                           │
+│  • TF-IDF ranking + IA real (embeddings)                 │
+│  • Cache con LMDB / JSON                                 │
+│  • Parser con tree-sitter                                │
+│  • Sistema i18n (es/en)                                  │
+└───────────────────────┬──────────────────────────────────┘
+                        │
+┌───────────────────────▼──────────────────────────────────┐
+│                    Servicios                             │
+├──────────────────────────────────────────────────────────┤
+│  • Servidor HTTP (axum)                                  │
+│  • Watch mode (reindexado automático)                    │
+│  • Configuración global (~/.config/semcode-search/)      │
+│  • Historial y alias                                     │
+└──────────────────────────────────────────────────────────┘
+```
+## Estructura del proyecto
+```marckdown
+semcode-search/
+├── src/                          # CLI + Core
+│   ├── cli/                      # Comandos y argumentos
+│   ├── core/                     # Motor de búsqueda
+│   ├── cache/                    # Gestión de caché
+│   ├── embeddings/               # IA real (fastembed)
+│   ├── history/                  # Historial de búsquedas
+│   ├── i18n/                     # Internacionalización
+│   ├── server/                   # Servidor HTTP
+│   ├── tui/                      # Interfaz TUI
+│   └── watch/                    # Watch mode
+├── gui/                          # GUI con Tauri
+│   ├── src/                      # Frontend (HTML/CSS/JS)
+│   └── src-tauri/                # Backend Rust
+├── plugins/                      # Plugins para editores
+│   ├── vscode/                   # Extensión VSCode
+│   └── neovim/                   # Plugin Neovim
+├── benches/                      # Benchmarks
+├── tests/                        # Tests de integración
+└── models/                       # Modelos IA (gitignored)
 ```
 ## 🗺️ Roadmap
-```marckdown
-Versión	Features	Estado
-v0.1.0	Basic search with colors	✅
-v0.2.0	Filters, ignore directories, exact search	✅
-v0.3.0	Cache - instant searches	✅
-v0.4.0	Semantic search with TF-IDF	✅
-v0.5.0	Filename search, occurrence counter, summary	✅
-v0.6.0	Extension indexing, size filtering	✅
-v0.7.0	Glob pattern ignore, compressed file search	✅
-v0.8.0	Global config, aliases, interactive mode	✅
-v0.9.0	Refactoring, parallel indexing	✅
-v1.0.0	Stable release with public API	✅
-v2.0.0	Stats, history, multi-thread, watch, multiplatform	✅
-v3.0.0	IA real, servidor, TUI, plugins, gitignore	🚧 Próximamente
-```
+
+| Versión | Features | Estado |
+|---------|----------|--------|
+| **v0.1.0** | Basic search with colors | ✅ |
+| **v0.2.0** | Filters, ignore directories, exact search | ✅ |
+| **v0.3.0** | Cache - instant searches | ✅ |
+| **v0.4.0** | Semantic search with TF-IDF | ✅ |
+| **v0.5.0** | Filename search, occurrence counter, summary | ✅ |
+| **v0.6.0** | Extension indexing, size filtering | ✅ |
+| **v0.7.0** | Glob pattern ignore, compressed file search | ✅ |
+| **v0.8.0** | Global config, aliases, interactive mode | ✅ |
+| **v0.9.0** | Refactoring, parallel indexing | ✅ |
+| **v1.0.0** | Stable release with public API | ✅ |
+| **v2.0.0** | Stats, history, multi-thread, watch, multiplatform | ✅ |
+| **v3.0.0** | GUI, IA real, server, TUI, plugins, i18n | ✅ |
+| **v3.0.1** | Fix CLI accents, more languages | 🚧 Próximamente |
+| **v4.0.0** | Plugins marketplace, GUI for Linux/macOS | 🚧 Futuro |
+
+---
+
 ## 📁 Supported extensions
-Rust (.rs)
 
-Python (.py)
+- Rust (`.rs`)
+- Python (`.py`)
+- JavaScript/TypeScript (`.js`, `.ts`)
+- Go (`.go`)
+- Java (`.java`)
+- C/C++ (`.c`, `.cpp`, `.h`)
+- HTML (`.html`)
+- CSS (`.css`)
+- Markdown (`.md`)
+- TOML (`.toml`)
+- JSON (`.json`)
+- YAML (`.yml`, `.yaml`)
+- Y más: `.sh`, `.bash`, `.xml`, `.sql`, `.rb`, `.php`, `.swift`, `.kt`
 
-JavaScript/TypeScript (.js, .ts)
-
-Go (.go)
-
-Java (.java)
-
-C/C++ (.c, .cpp, .h)
-
-And more: .toml, .json, .yaml, .md, .sh, .bash, .css, .html, .xml, .sql, .rb, .php, .swift, .kt
+---
 
 ## 🛠️ Development
 
-# Clone
 ```bash
+# Clonar
 git clone https://github.com/lecodev-26/semcode-search
-```
-```bash
 cd semcode-search
-```
 
-# Build
-```bash
+# Build (CLI)
 cargo build
-```
 
-# Build optimized
-```bash
+# Build optimizado
 cargo build --release
-```
 
-# Run tests
-```bash
-cargo test
-```
+# Build con todas las features
+cargo build --release --features "ai server tui"
 
-# Run benchmarks
-```bash
+# Tests
+cargo test --all
+
+# Benchmarks
 cargo bench
+
+# Formato
+cargo fmt
+
+# Clippy
+cargo clippy --all-targets --all-features -- -D warnings
+
+# GUI (necesita Tauri CLI)
+cd gui/src-tauri
+cargo tauri dev     # Modo desarrollo
+cargo tauri build   # Compilar instalador
 ```
+## 🔌 Plugins
+VSCode
+Copia la carpeta plugins/vscode/ a:
+
+```text
+%USERPROFILE%\.vscode\extensions\semcode-search-vscode
+```
+Luego usa Ctrl + Shift + F para buscar.
+
+## Neovim
+Añade a tu init.lua:
+
+```lua
+require('semcode.semcode')
+```
+Y usa:
+
+<leader>ss — Buscar
+
+<leader>sa — Buscar con IA
+
+<leader>si — Indexar
+
+<leader>st — Stats
+
 ## 📄 License
-MIT
+MIT — ver LICENSE para más detalles.
 
 ## 👤 Author
-([@lecodev-26](https://github.com/lecodev-26))
+Manuel (@lecodev-26)
+
+## 🐙 GitHub: @lecodev-26
+
+## 📦 Crates.io: semcode-search
+
+## ⭐ Support
+Si este proyecto te ha sido útil, dale una ⭐ en GitHub. ¡Ayuda mucho!
+
+https://img.shields.io/github/stars/lecodev-26/semcode-search?style=social
