@@ -1,179 +1,232 @@
 # 🔍 semcode-search
 
-[![Rust](https://img.shields.io/badge/rust-1.75%2B-blue.svg)](https://www.rust-lang.org)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Version](https://img.shields.io/badge/version-1.0.0-brightgreen.svg)](https://github.com/lecodev-26/semcode-search/releases)
-[![Termux](https://img.shields.io/badge/Termux-compatible-brightgreen.svg)](https://termux.com)
+[![Rust](https://img.shields.io/badge/rust-1.75%2B-blue.svg)](https://www.rust-lang.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Latest Release](https://img.shields.io/github/v/release/lecodev-26/semcode-search)](https://github.com/lecodev-26/semcode-search/releases)
+[![CI](https://github.com/lecodev-26/semcode-search/actions/workflows/ci.yml/badge.svg)](https://github.com/lecodev-26/semcode-search/actions/workflows/ci.yml)
+[![Crates.io](https://img.shields.io/crates/v/semcode-search.svg)](https://crates.io/crates/semcode-search)
+[![Downloads](https://img.shields.io/crates/d/semcode-search.svg)](https://crates.io/crates/semcode-search)
 
-> **Fast semantic code search CLI with TF-IDF ranking, caching, and advanced filtering.**
+> **Search your codebase by meaning, not only by exact text.**
 
----
+`semcode-search` is a local-first code search tool written in Rust. It combines traditional text search, TF-IDF semantic ranking and optional local AI embeddings, with CLI, TUI, desktop GUI, REST API and editor integrations.
 
-## ✨ Features
+## ✨ Why semcode-search?
 
-- 🔍 **Text search** with color highlighting
-- 🧠 **Semantic search** using TF-IDF ranking
-- 💾 **Intelligent cache** for instant searches
-- 📁 **Advanced filtering** by extension, size, and glob patterns
-- 📄 **Filename search**
-- ⚙️ **Global configuration**
-- 🏷️ **Search aliases** (save, list, remove, run)
-- 🎮 **Interactive mode** to navigate results
-- ⚡ **Parallel indexing** with rayon
-- 📱 **Termux compatible** (Android)
-- 📚 **Public API** for use as a library
-
----
-
-## 🚀 Installation
+When a codebase gets large, exact text search is often not enough. You may remember what a piece of code does without remembering the exact symbol or wording.
 
 ```bash
-# From crates.io (soon)
+semcode-search search \
+  --query "where are user permissions validated?" \
+  --path . \
+  --ai
+```
+
+The goal is to help developers find relevant code from natural-language intent while keeping the core workflow local and scriptable.
+
+## 🚀 Install
+
+### From crates.io
+
+```bash
 cargo install semcode-search
+```
 
-# From GitHub
+### From source
+
+```bash
 git clone https://github.com/lecodev-26/semcode-search
 cd semcode-search
 cargo build --release
-sudo cp target/release/semcode-search /usr/local/bin/
 ```
 
----
-
-📖 Usage
-
-Basic commands
+## 🔎 Quick start
 
 ```bash
-# Index a project
 semcode-search index --path .
-
-# Search by text
 semcode-search search --query "fn main" --path .
-
-# Search semantically (TF-IDF)
 semcode-search search --query "authentication middleware" --path . --semantic
-
-# Search by filename
-semcode-search search --file "main.rs" --path .
-
-# Search with verbose output
-semcode-search search --query "error" --path . --verbose
+semcode-search index --path . --ai
+semcode-search search --query "function that validates email addresses" --path . --ai
 ```
 
-Alias management
+## 🧠 Search modes
+
+| Mode | Purpose |
+|---|---|
+| Text search | Fast exact/substring-oriented search |
+| TF-IDF | Semantic ranking without an external AI service |
+| AI embeddings | Natural-language similarity using local embeddings |
+| Filename search | Locate files by filename |
+| Watch mode | Reindex automatically as files change |
+
+AI embeddings are optional. The project is designed to remain useful without requiring a remote AI API.
+
+## 🖥️ Interfaces
+
+### CLI
+The primary command-line interface.
+
+### TUI
 
 ```bash
-# Save a search alias
-semcode-search alias save find-main "main" -- --ext rs --path .
-
-# List all aliases
-semcode-search alias list
-
-# Run an alias
-semcode-search alias run find-main
-
-# Remove an alias
-semcode-search alias remove find-main
+semcode-search tui --path .
 ```
 
-Configuration
+### Desktop GUI
+
+The v3.x desktop application uses Tauri and provides search, code preview, indexing, statistics, history, aliases, configuration and Spanish/English UI.
+
+Download installers from [GitHub Releases](https://github.com/lecodev-26/semcode-search/releases).
+
+### REST API
 
 ```bash
-# Initialize configuration
-semcode-search init
-
-# Configuration file is saved at:
-# ~/.config/semcode-search/config.toml (Linux)
-# ~/Library/Application Support/semcode-search/config.toml (macOS)
+semcode-search serve
 ```
 
-Interactive mode
+Default address:
+
+```text
+http://127.0.0.1:8080
+```
+
+Endpoints include:
+
+```text
+GET /
+GET /health
+GET /stats
+GET /search?q=query
+```
+
+For network-exposed deployments, review [SECURITY.md](SECURITY.md).
+
+### Editor integrations
+
+- VS Code
+- Neovim
+
+See [`plugins/`](plugins/).
+
+## 📦 Features
+
+- 🔍 text search with highlighted results
+- 🧠 TF-IDF semantic ranking
+- 🤖 optional local embeddings with `fastembed`
+- 💾 caching
+- 📁 extension, size and glob filters
+- 📄 filename search
+- ⚡ parallel indexing with Rayon
+- ⚡ multithreaded search
+- 👁️ watch mode
+- 📊 project statistics
+- 🕐 search history
+- 🏷️ saved aliases
+- 🌐 REST API with Axum
+- 🎨 TUI with Ratatui
+- 🖥️ desktop GUI with Tauri
+- 🌍 Spanish/English interface
+- 🔌 VS Code and Neovim integrations
+- 📚 public Rust library API
+- 📱 Termux-compatible CLI
+
+## 🏗️ Architecture
+
+```text
+                    Interfaces
+       ┌──────────────┬──────────────┬──────────────┐
+       │     CLI      │     TUI      │      GUI     │
+       │    clap      │   ratatui    │    Tauri     │
+       └──────────────┴──────┬───────┴──────────────┘
+                             │
+                      Core Library
+       ┌─────────────────────┴─────────────────────┐
+       │ SearchEngine / public API                 │
+       │ indexing · ranking · cache · embeddings   │
+       │ tree-sitter · filters · i18n              │
+       └─────────────────────┬─────────────────────┘
+                             │
+                         Services
+       ┌─────────────────────┴─────────────────────┐
+       │ REST API · watch mode · config · history │
+       │ aliases · project metadata                │
+       └───────────────────────────────────────────┘
+```
+
+## 🌍 Supported source files
+
+Rust, Python, JavaScript/TypeScript, Go, Java, C/C++, HTML/CSS, Markdown, TOML, JSON, YAML, Shell, SQL, Ruby, PHP, Swift, Kotlin and more.
+
+## 🧪 Development
 
 ```bash
-semcode-search search --query "fn" --path . --interactive
-```
-
----
-
-🏗️ Architecture
-
-```
-┌─────────────────────────────────────────────────────┐
-│                    CLI (clap)                       │
-├─────────────────────────────────────────────────────┤
-│  • Commands: init, alias, index, search            │
-│  • Subcommands: save, list, remove, run            │
-└─────────────────────┬───────────────────────────────┘
-                      │
-┌─────────────────────▼───────────────────────────────┐
-│                 Core Library                        │
-├─────────────────────────────────────────────────────┤
-│  • SearchEngine (public API)                       │
-│  • TF-IDF ranking                                  │
-│  • Parallel indexing (rayon)                       │
-│  • Cache management                                │
-└─────────────────────────────────────────────────────┘
-```
-
----
-
-🗺️ Roadmap
-
-Version Features Status
-v0.1.0 Basic search with colors ✅
-v0.2.0 Filters, ignore directories, exact search ✅
-v0.3.0 Cache - instant searches ✅
-v0.4.0 Semantic search with TF-IDF ✅
-v0.5.0 Filename search, occurrence counter, summary ✅
-v0.6.0 Extension indexing, size filtering ✅
-v0.7.0 Glob pattern ignore, compressed file search ✅
-v0.8.0 Global config, aliases, interactive mode ✅
-v0.9.0 Refactoring, parallel indexing ✅
-v1.0.0 ✅ Stable release with public API ✅
-
----
-
-📁 Supported extensions
-
-· Rust (.rs)
-· Python (.py)
-· JavaScript/TypeScript (.js, .ts)
-· Go (.go)
-· Java (.java)
-· C/C++ (.c, .cpp, .h)
-· And more: .toml, .json, .yaml, .md, .sh, .bash, .css, .html, .xml, .sql, .rb, .php, .swift, .kt
-
----
-
-🛠️ Development
-
-```bash
-# Clone
-git clone https://github.com/lecodev-26/semcode-search
-cd semcode-search
-
-# Build
 cargo build
-
-# Build optimized
 cargo build --release
-
-# Run tests
-cargo test
-
-# Run benchmarks
+cargo test --all
+cargo fmt -- --check
+cargo clippy --all-targets --all-features -- -D warnings
 cargo bench
 ```
 
----
+Optional features:
 
-📄 License
+```bash
+cargo build --release --features "ai server tui"
+```
 
-MIT
+## 🤝 Contributing
 
----
+Bug reports, documentation improvements and pull requests are welcome.
 
-👤 Author
+Before opening a PR:
 
-Manuel (@lecodev-26)
+```bash
+cargo fmt -- --check
+cargo test --all
+cargo clippy --all-targets --all-features -- -D warnings
+```
+
+Read [CONTRIBUTING.md](CONTRIBUTING.md) and [SECURITY.md](SECURITY.md).
+
+## 🔐 Security
+
+Do not publish sensitive vulnerability details in public issues. See [SECURITY.md](SECURITY.md).
+
+## 🗺️ Roadmap
+
+### Completed
+
+- [x] stable CLI and public library API
+- [x] caching and filtering
+- [x] TF-IDF semantic ranking
+- [x] parallel indexing
+- [x] statistics and history
+- [x] watch mode
+- [x] multiplatform CLI support
+- [x] desktop GUI
+- [x] local AI embeddings
+- [x] REST API
+- [x] TUI
+- [x] VS Code / Neovim integrations
+- [x] internationalization
+
+### Next
+
+- [ ] improve public API documentation
+- [ ] expand integration and regression tests
+- [ ] improve Linux/macOS desktop packaging
+- [ ] expand editor integrations
+- [ ] improve benchmark coverage and published performance data
+- [ ] continue security and dependency hardening
+
+## 📄 License
+
+MIT. See [LICENSE](LICENSE).
+
+## 🔗 Links
+
+- [GitHub](https://github.com/lecodev-26/semcode-search)
+- [Crates.io](https://crates.io/crates/semcode-search)
+- [Documentation](https://docs.rs/semcode-search)
+- [Releases](https://github.com/lecodev-26/semcode-search/releases)
