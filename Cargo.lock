@@ -3235,6 +3235,7 @@ dependencies = [
  "once_cell",
  "semcode-core",
  "serde",
+ "streaming-iterator",
  "thiserror 2.0.20",
  "tracing",
  "tree-sitter",
