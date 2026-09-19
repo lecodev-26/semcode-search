@@ -202,7 +202,6 @@ pub fn extract_from_source(
 
 #[cfg(test)]
 mod tests {
-    use super::*;
 
     #[test]
     fn node_text_works() {
