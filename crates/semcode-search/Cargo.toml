@@ -1,0 +1,29 @@
+[package]
+name = "semcode-search"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+homepage.workspace = true
+description = "Motor de búsqueda híbrida (Exact + BM25 + Semantic + Symbol + RRF)"
+
+[dependencies]
+semcode-core = { path = "../semcode-core" }
+semcode-index = { path = "../semcode-index" }
+semcode-embeddings = { path = "../semcode-embeddings", default-features = false }
+
+rayon = { workspace = true }
+regex = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+anyhow = { workspace = true }
+tracing = { workspace = true }
+unicode-segmentation = { workspace = true }
+
+[features]
+default = ["hybrid"]
+hybrid = []
+rerank = []

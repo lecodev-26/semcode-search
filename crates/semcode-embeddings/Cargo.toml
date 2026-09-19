@@ -1,0 +1,29 @@
+[package]
+name = "semcode-embeddings"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+homepage.workspace = true
+description = "Proveedores de embeddings (fastembed, OpenAI, Ollama)"
+
+[dependencies]
+semcode-core = { path = "../semcode-core" }
+
+fastembed = { workspace = true, optional = true }
+reqwest = { workspace = true, optional = true }
+ndarray = { workspace = true }
+
+serde = { workspace = true }
+thiserror = { workspace = true }
+anyhow = { workspace = true }
+tracing = { workspace = true }
+
+[features]
+default = ["fastembed"]
+fastembed = ["dep:fastembed"]
+openai = ["dep:reqwest"]
+ollama = ["dep:reqwest"]
+all = ["fastembed", "openai", "ollama"]
