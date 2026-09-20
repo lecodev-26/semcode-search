@@ -37,6 +37,9 @@ thiserror = { workspace = true }
 anyhow = { workspace = true }
 tracing = { workspace = true }
 tracing-subscriber = { workspace = true }
+walkdir.workspace = true
+ignore.workspace = true
+rusqlite.workspace = true
 
 [features]
 default = ["fastembed"]
@@ -46,3 +49,6 @@ ollama = ["semcode-embeddings/ollama"]
 server = ["dep:semcode-server"]
 mcp = ["dep:semcode-mcp"]
 full = ["fastembed", "openai", "ollama", "server", "mcp"]
+
+[dev-dependencies]
+tempfile.workspace = true

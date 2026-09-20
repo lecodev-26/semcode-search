@@ -29,4 +29,4 @@ gui/src-tauri/target/
 gui/src-tauri/gen/
 
 # Logos generados (los originales, si quieres)
-# logo.png
+# logo.png.semcode/

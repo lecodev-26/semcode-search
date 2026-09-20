@@ -3148,7 +3148,9 @@ dependencies = [
  "clap",
  "colored",
  "dialoguer",
+ "ignore",
  "indicatif 0.17.11",
+ "rusqlite",
  "semcode-core",
  "semcode-embeddings",
  "semcode-index",
@@ -3158,10 +3160,12 @@ dependencies = [
  "semcode-server",
  "serde",
  "serde_json",
+ "tempfile",
  "thiserror 2.0.20",
  "toml 0.8.23",
  "tracing",
  "tracing-subscriber",
+ "walkdir",
 ]
 
 [[package]]
