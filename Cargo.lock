@@ -3256,6 +3256,7 @@ dependencies = [
  "anyhow",
  "rayon",
  "regex",
+ "rusqlite",
  "semcode-core",
  "semcode-embeddings",
  "semcode-index",
