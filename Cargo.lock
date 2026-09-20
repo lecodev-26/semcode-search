@@ -3183,6 +3183,7 @@ dependencies = [
  "anyhow",
  "fastembed",
  "ndarray 0.16.1",
+ "rayon",
  "reqwest",
  "semcode-core",
  "serde",
